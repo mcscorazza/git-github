@@ -1,0 +1,1675 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Git &amp; GitHub na Prática</title>
+<style>
+:root{
+  --bg:#f7f7f5;--panel:#fff;--panel2:#f0efeb;--text:#1f2328;--muted:#656d76;--line:#e3e1db;
+  --accent:#e8590c;--accent2:#f76707;--accent-soft:#fff0e6;--green:#2f9e44;--red:#e03131;--blue:#1c7ed6;--yellow:#f59f00;
+  --code-bg:#14161a;--code-text:#e6e6e6;--shadow:0 1px 2px rgba(0,0,0,.05),0 8px 24px rgba(0,0,0,.06);
+}
+:root[data-theme=dark]{
+  --bg:#0f1115;--panel:#171a20;--panel2:#1e222a;--text:#e6e8eb;--muted:#9aa4b2;--line:#2a2f39;
+  --accent:#ff922b;--accent2:#ffa94d;--accent-soft:#2b2015;--green:#51cf66;--red:#ff6b6b;--blue:#4dabf7;--yellow:#ffd43b;
+  --code-bg:#0b0d10;--code-text:#e6e6e6;--shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme=light]){
+    --bg:#0f1115;--panel:#171a20;--panel2:#1e222a;--text:#e6e8eb;--muted:#9aa4b2;--line:#2a2f39;
+    --accent:#ff922b;--accent2:#ffa94d;--accent-soft:#2b2015;--green:#51cf66;--red:#ff6b6b;--blue:#4dabf7;--yellow:#ffd43b;
+    --code-bg:#0b0d10;--shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+  }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.7 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:var(--accent)}
+code,pre,.mono{font-family:ui-monospace,"Cascadia Code",Consolas,Menlo,monospace}
+:not(pre)>code{background:var(--panel2);border:1px solid var(--line);padding:.08em .4em;border-radius:6px;font-size:.88em}
+
+/* layout */
+.app{display:grid;grid-template-columns:320px 1fr;min-height:100vh}
+aside{position:sticky;top:0;height:100vh;overflow:auto;background:var(--panel);border-right:1px solid var(--line);padding:18px 14px 40px}
+main{min-width:0;padding:0 clamp(16px,4vw,48px) 80px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.15rem;letter-spacing:-.02em;margin:2px 6px 14px}
+.brand .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#c92a2a);display:grid;place-items:center;color:#fff;font-size:18px}
+.prog{margin:0 6px 14px}
+.prog .bar{height:8px;background:var(--panel2);border-radius:99px;overflow:hidden;border:1px solid var(--line)}
+.prog .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--yellow));transition:width .4s}
+.prog small{color:var(--muted)}
+.search{width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit;margin-bottom:10px}
+.search:focus{outline:2px solid var(--accent);outline-offset:1px}
+details.mod{margin:4px 0}
+details.mod>summary{list-style:none;cursor:pointer;padding:8px 10px;border-radius:10px;font-weight:700;font-size:.9rem;display:flex;gap:8px;align-items:center;user-select:none}
+details.mod>summary::-webkit-details-marker{display:none}
+details.mod>summary:hover{background:var(--panel2)}
+details.mod>summary .n{width:22px;height:22px;border-radius:7px;background:var(--accent-soft);color:var(--accent);font-size:.75rem;display:grid;place-items:center;flex:none}
+details.mod>summary .c{margin-left:auto;font-weight:500;font-size:.75rem;color:var(--muted)}
+.nav a{display:flex;gap:9px;align-items:center;padding:6px 10px 6px 18px;margin-left:10px;border-left:2px solid var(--line);text-decoration:none;color:var(--muted);font-size:.9rem;line-height:1.35}
+.nav a:hover{color:var(--text);background:var(--panel2)}
+.nav a.active{color:var(--accent);border-left-color:var(--accent);background:var(--accent-soft);font-weight:600}
+.nav a .dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--line);flex:none;display:grid;place-items:center;font-size:9px;color:#fff}
+.nav a.done .dot{background:var(--green);border-color:var(--green)}
+.nav a.done .dot::after{content:"✓"}
+.special{display:flex;flex-direction:column;gap:2px;margin:10px 0}
+.special a{display:flex;gap:10px;align-items:center;padding:8px 10px;border-radius:10px;text-decoration:none;color:var(--text);font-weight:600;font-size:.9rem}
+.special a:hover,.special a.active{background:var(--accent-soft);color:var(--accent)}
+
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px;padding:12px 0;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);margin:0 calc(-1*clamp(16px,4vw,48px));padding-inline:clamp(16px,4vw,48px)}
+.topbar .crumb{color:var(--muted);font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar .sp{flex:1}
+.iconbtn{border:1px solid var(--line);background:var(--panel);border-radius:10px;width:38px;height:38px;display:grid;place-items:center}
+.iconbtn:hover{border-color:var(--accent)}
+#menuBtn{display:none}
+.readbar{position:fixed;top:0;left:0;height:3px;background:var(--accent);width:0;z-index:50}
+
+article{max-width:820px;margin:0 auto;padding-top:34px}
+.kicker{color:var(--accent);font-weight:700;font-size:.82rem;letter-spacing:.08em;text-transform:uppercase}
+h1{font-size:clamp(1.9rem,4vw,2.6rem);line-height:1.15;letter-spacing:-.03em;margin:.3em 0 .2em}
+h2{font-size:1.5rem;letter-spacing:-.02em;margin:2em 0 .4em;padding-top:.3em}
+h3{font-size:1.15rem;margin:1.6em 0 .3em}
+.meta{color:var(--muted);font-size:.9rem;display:flex;gap:14px;flex-wrap:wrap;margin-bottom:1.4em}
+p,li{max-width:70ch}
+li{margin:.25em 0}
+.lead{font-size:1.15rem;color:var(--muted)}
+
+.call{border-radius:14px;padding:14px 18px;margin:1.2em 0;border:1px solid var(--line);border-left-width:5px;background:var(--panel);box-shadow:var(--shadow)}
+.call b.t{display:block;margin-bottom:2px;font-size:.85rem;letter-spacing:.04em;text-transform:uppercase}
+.call.tip{border-left-color:var(--green)} .call.tip b.t{color:var(--green)}
+.call.warn{border-left-color:var(--yellow)} .call.warn b.t{color:var(--yellow)}
+.call.info{border-left-color:var(--blue)} .call.info b.t{color:var(--blue)}
+.call.danger{border-left-color:var(--red)} .call.danger b.t{color:var(--red)}
+.call p{margin:.3em 0}
+
+.codeblock{position:relative;margin:1.1em 0;border-radius:14px;overflow:hidden;background:var(--code-bg);box-shadow:var(--shadow);border:1px solid #262b33}
+.codeblock .bar{display:flex;align-items:center;gap:6px;padding:8px 12px;background:#1b1f26;color:#8b95a5;font-size:.75rem}
+.codeblock .bar i{width:10px;height:10px;border-radius:50%;background:#ff5f56}
+.codeblock .bar i:nth-child(2){background:#ffbd2e}.codeblock .bar i:nth-child(3){background:#27c93f}
+.codeblock .bar span{margin-left:8px}
+.codeblock .bar button{margin-left:auto;background:#262b33;color:#cbd5e1;border:0;border-radius:7px;padding:3px 10px;font-size:.72rem}
+.codeblock .bar button:hover{background:var(--accent);color:#fff}
+.codeblock pre{margin:0;padding:14px 18px;overflow:auto;color:var(--code-text);font-size:.88rem;line-height:1.65}
+.codeblock .p{color:#51cf66;user-select:none}
+.codeblock .cmd{color:#ffa94d;font-weight:700}
+.codeblock .sub{color:#74c0fc;font-weight:600}
+.codeblock .fl{color:#da77f2}
+.codeblock .cm{color:#7d8794;font-style:italic}
+.codeblock .out{color:#aab3c0}
+.codeblock .str{color:#8ce99a}
+
+table{border-collapse:collapse;width:100%;margin:1.2em 0;background:var(--panel);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);font-size:.93rem}
+th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--panel2);font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+tr:last-child td{border-bottom:0}
+.tablewrap{overflow:auto}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:var(--shadow);margin:1.2em 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:1.2em 0}
+.grid .card{margin:0}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:8px 16px;font-weight:600}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:var(--accent2);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* quiz */
+.quiz{margin:2.2em 0 1em}
+.q{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin:12px 0;box-shadow:var(--shadow)}
+.q h4{margin:0 0 10px;font-size:1rem}
+.q .opt{display:block;width:100%;text-align:left;padding:10px 14px;margin:6px 0;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.q .opt:hover:not(:disabled){border-color:var(--accent)}
+.q .opt.ok{background:color-mix(in srgb,var(--green) 18%,var(--panel));border-color:var(--green)}
+.q .opt.bad{background:color-mix(in srgb,var(--red) 16%,var(--panel));border-color:var(--red)}
+.q .exp{margin-top:8px;padding:10px 14px;border-radius:10px;background:var(--panel2);font-size:.92rem;display:none}
+.q.answered .exp{display:block}
+
+/* nav footer */
+.pager{display:flex;gap:12px;justify-content:space-between;margin-top:3em;flex-wrap:wrap}
+.pager a{flex:1;min-width:200px;text-decoration:none;color:var(--text);border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:14px 18px;box-shadow:var(--shadow)}
+.pager a:hover{border-color:var(--accent)}
+.pager small{color:var(--muted);display:block}
+.pager a.next{text-align:right}
+.finish{display:flex;justify-content:center;margin:2em 0 0}
+
+/* widgets */
+.areas{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.area{border:2px dashed var(--line);border-radius:14px;padding:12px;min-height:140px;background:var(--panel)}
+.area h5{margin:0 0 8px;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.area .file{display:inline-flex;gap:6px;align-items:center;padding:6px 10px;border-radius:9px;font-size:.85rem;margin:3px;background:var(--panel2);border:1px solid var(--line);animation:pop .3s}
+.area .file.mod{background:color-mix(in srgb,var(--yellow) 22%,var(--panel));border-color:var(--yellow)}
+.area .file.stg{background:color-mix(in srgb,var(--green) 20%,var(--panel));border-color:var(--green)}
+.area .file.com{background:color-mix(in srgb,var(--blue) 18%,var(--panel));border-color:var(--blue)}
+@keyframes pop{from{transform:scale(.7);opacity:0}to{transform:none;opacity:1}}
+.wbtns{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 4px}
+.wlog{font-size:.88rem;color:var(--muted);min-height:1.6em}
+
+/* lab */
+.lab{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px;margin-top:16px}
+.term{background:var(--code-bg);border-radius:14px;overflow:hidden;border:1px solid #262b33;display:flex;flex-direction:column;height:520px;box-shadow:var(--shadow)}
+.term .bar{display:flex;align-items:center;gap:6px;padding:8px 12px;background:#1b1f26;color:#8b95a5;font-size:.75rem}
+.term .bar i{width:10px;height:10px;border-radius:50%;background:#ff5f56}.term .bar i:nth-child(2){background:#ffbd2e}.term .bar i:nth-child(3){background:#27c93f}
+.term .bar span{margin-left:8px}
+#tout{flex:1;overflow:auto;padding:12px 14px;color:#d7dde5;font-size:.85rem;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+#tout .l{color:#ffa94d;font-weight:700} #tout .g{color:#51cf66} #tout .r{color:#ff6b6b} #tout .y{color:#ffd43b} #tout .d{color:#7d8794} #tout .b{color:#74c0fc}
+.tin{display:flex;gap:8px;padding:10px 14px;border-top:1px solid #262b33;align-items:center}
+.tin span{color:#51cf66;font-size:.85rem;white-space:nowrap}
+.tin input{flex:1;background:transparent;border:0;outline:0;color:#fff;font:inherit;font-size:.88rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:99px;padding:3px 11px;font-size:.78rem;font-family:ui-monospace,Consolas,monospace}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.side{display:flex;flex-direction:column;gap:14px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;box-shadow:var(--shadow)}
+.panel h4{margin:0 0 8px;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+#graph{overflow:auto}
+#graph svg{display:block;min-width:100%}
+.goal{display:flex;gap:8px;align-items:flex-start;font-size:.88rem;padding:3px 0}
+.goal i{flex:none;width:18px;height:18px;border-radius:50%;border:2px solid var(--line);margin-top:3px;display:grid;place-items:center;font-size:10px;color:#fff;font-style:normal}
+.goal.ok i{background:var(--green);border-color:var(--green)}
+.goal.ok span{text-decoration:line-through;color:var(--muted)}
+.fstate{display:flex;flex-wrap:wrap;gap:6px}
+.fstate span{font-size:.8rem;padding:3px 9px;border-radius:8px;border:1px solid var(--line);font-family:ui-monospace,Consolas,monospace}
+.fs-u{background:color-mix(in srgb,var(--red) 15%,var(--panel))}
+.fs-m{background:color-mix(in srgb,var(--yellow) 22%,var(--panel))}
+.fs-s{background:color-mix(in srgb,var(--green) 20%,var(--panel))}
+.fs-c{background:color-mix(in srgb,var(--blue) 15%,var(--panel))}
+
+/* cheat sheet */
+.cs-row{display:grid;grid-template-columns:minmax(200px,auto) 1fr;gap:14px;padding:10px 14px;border-bottom:1px solid var(--line);align-items:center}
+.cs-row:last-child{border:0}
+.cs-row code{cursor:pointer;background:var(--code-bg);color:#ffa94d;border:0;padding:5px 10px;border-radius:8px;display:inline-block;font-size:.85rem}
+.cs-row code:hover{outline:2px solid var(--accent)}
+.cs-cat{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);font-weight:700;margin:22px 0 6px}
+
+/* hero */
+.hero{padding:40px 0 10px}
+.hero h1{font-size:clamp(2.2rem,5.5vw,3.6rem)}
+.hero h1 em{font-style:normal;background:linear-gradient(90deg,var(--accent),#c92a2a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.modcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin:1.5em 0}
+.modcard{display:block;text-decoration:none;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px 18px;box-shadow:var(--shadow);transition:.15s}
+.modcard:hover{transform:translateY(-3px);border-color:var(--accent)}
+.modcard .n{font-size:.75rem;color:var(--accent);font-weight:700}
+.modcard h3{margin:.2em 0 .3em;font-size:1.05rem}
+.modcard p{margin:0;color:var(--muted);font-size:.88rem}
+.modcard .mp{height:5px;border-radius:9px;background:var(--panel2);margin-top:12px;overflow:hidden}
+.modcard .mp i{display:block;height:100%;background:var(--green)}
+.score{font-size:3rem;font-weight:800;letter-spacing:-.04em}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(30px);background:var(--text);color:var(--bg);padding:9px 18px;border-radius:99px;opacity:0;transition:.25s;z-index:99;font-size:.9rem;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%)}
+
+@media(max-width:980px){
+  .app{grid-template-columns:1fr}
+  aside{position:fixed;z-index:60;left:0;top:0;width:min(330px,88vw);transform:translateX(-100%);transition:.25s;box-shadow:var(--shadow)}
+  body.menu aside{transform:none}
+  #menuBtn{display:grid}
+  .lab{grid-template-columns:1fr}
+  .areas{grid-template-columns:1fr}
+  .cs-row{grid-template-columns:1fr}
+}
+@media print{aside,.topbar,.pager,.quiz{display:none}.app{display:block}}
+</style>
+</head>
+<body>
+<div class="readbar" id="readbar"></div>
+<div class="app">
+  <aside id="side">
+    <div class="brand"><div class="logo">⑂</div><div>Git &amp; GitHub<br><small style="font-weight:500;color:var(--muted)">na prática</small></div></div>
+    <div class="prog"><div class="bar"><i id="pbar"></i></div><small id="ptxt"></small></div>
+    <input class="search" id="search" placeholder="Buscar lição…  ( / )" autocomplete="off">
+    <div class="special" id="special"></div>
+    <nav class="nav" id="nav"></nav>
+  </aside>
+  <main>
+    <div class="topbar">
+      <button class="iconbtn" id="menuBtn" title="Menu">☰</button>
+      <div class="crumb" id="crumb"></div>
+      <div class="sp"></div>
+      <button class="iconbtn" id="themeBtn" title="Alternar tema">◐</button>
+    </div>
+    <article id="view"></article>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ utilidades ============ */
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let toastT;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),1800)}
+
+/* bloco de código com realce simples: linhas "$ cmd" são comandos, as demais são saída */
+function C(text,title){
+  text=text.replace(/^\n/,'').replace(/\n\s*$/,'');
+  const raw=text.split('\n').filter(l=>l.startsWith('$ ')).map(l=>l.slice(2)).join('\n')||text;
+  const html=text.split('\n').map(l=>{
+    if(l.startsWith('$ ')){
+      let body=l.slice(2),cm='';const i=body.search(/\s#\s/);if(i>-1){cm=body.slice(i);body=body.slice(0,i)}
+      let b=esc(body).replace(/("[^"]*"|'[^']*')/g,'<span class="str">$1</span>')
+        .replace(/(^|\s)(--?[a-zA-Z][\w-]*)/g,'$1<span class="fl">$2</span>');
+      b=b.replace(/^(\S+)(\s+)(\S+)/,(m,a,s,c)=>'<span class="cmd">'+a+'</span>'+s+(c.startsWith('-')||c.startsWith('<span')?c:'<span class="sub">'+c+'</span>'));
+      return '<span class="p">$</span> '+b+(cm?'<span class="cm">'+esc(cm)+'</span>':'');
+    }
+    if(l.startsWith('# '))return '<span class="cm">'+esc(l)+'</span>';
+    return '<span class="out">'+esc(l)+'</span>';
+  }).join('\n');
+  return '<div class="codeblock"><div class="bar"><i></i><i></i><i></i><span>'+esc(title||'terminal')+'</span><button data-copy="'+esc(raw).replace(/"/g,'&quot;')+'">copiar</button></div><pre>'+html+'</pre></div>';
+}
+const call=(type,title,html)=>'<div class="call '+type+'"><b class="t">'+title+'</b>'+html+'</div>';
+const tip=(h,t='Dica')=>call('tip',t,h), warn=(h,t='Atenção')=>call('warn',t,h), info=(h,t='Bom saber')=>call('info',t,h), danger=(h,t='Perigo')=>call('danger',t,h);
+
+/* ============ CONTEÚDO ============ */
+const MODULES=[
+/* ---------------- 1 ---------------- */
+{id:'m1',title:'Fundamentos',desc:'O que são Git e GitHub, e como instalar tudo.',lessons:[
+{id:'o-que-e',title:'O que é Git (e o que não é)',min:6,body:()=>`
+<p class="lead">Git é um sistema de controle de versão distribuído: ele registra a história do seu projeto e deixa você voltar no tempo, trabalhar em paralelo e colaborar sem pisar nos pés de ninguém.</p>
+<h2>O problema que o Git resolve</h2>
+<p>Quem nunca teve uma pasta assim?</p>
+${C(`
+relatorio_final.docx
+relatorio_final_v2.docx
+relatorio_final_v2_REVISADO.docx
+relatorio_final_v2_REVISADO_agora_vai.docx`,'a vida sem controle de versão')}
+<p>Com Git, existe <b>um</b> arquivo e uma linha do tempo de <b>commits</b>: fotografias do projeto, cada uma com autor, data e mensagem explicando o motivo da mudança.</p>
+<h2>Git ≠ GitHub</h2>
+<div class="grid">
+<div class="card"><h3 style="margin-top:0">🧰 Git</h3><p>Programa que roda na <b>sua máquina</b>. Gratuito, de código aberto, criado por Linus Torvalds em 2005 para o kernel do Linux. Funciona 100% offline.</p></div>
+<div class="card"><h3 style="margin-top:0">☁️ GitHub</h3><p>Serviço na <b>nuvem</b> que hospeda repositórios Git e adiciona colaboração: Pull Requests, Issues, Actions, Pages. Alternativas: GitLab, Bitbucket.</p></div>
+</div>
+<h2>Conceitos-chave</h2>
+<table><tr><th>Termo</th><th>Significado</th></tr>
+<tr><td><b>Repositório</b></td><td>Pasta do projeto + a pasta oculta <code>.git</code> com todo o histórico.</td></tr>
+<tr><td><b>Commit</b></td><td>Um snapshot do projeto, identificado por um hash (ex.: <code>a3f9c2e</code>).</td></tr>
+<tr><td><b>Branch</b></td><td>Uma linha de desenvolvimento independente; na prática, um ponteiro para um commit.</td></tr>
+<tr><td><b>Remote</b></td><td>Cópia do repositório hospedada em outro lugar (ex.: GitHub).</td></tr>
+<tr><td><b>Merge</b></td><td>Juntar o trabalho de duas branches.</td></tr>
+</table>
+${info('<p>"Distribuído" significa que <b>cada pessoa tem o histórico completo</b> na própria máquina. Se o servidor sumir, qualquer clone é um backup completo.</p>')}
+`,quiz:[
+{q:'Qual a diferença entre Git e GitHub?',o:['São o mesmo programa com nomes diferentes','Git é a ferramenta de versionamento local; GitHub é um serviço online que hospeda repositórios Git','Git é pago e GitHub é gratuito','GitHub é a versão offline do Git'],a:1,e:'Git roda localmente e gerencia o histórico. GitHub hospeda repositórios Git e adiciona recursos de colaboração.'},
+{q:'O que significa Git ser "distribuído"?',o:['Só funciona com internet','Cada clone possui o histórico completo do projeto','Os arquivos ficam divididos em vários servidores','Só pode ter um desenvolvedor por vez'],a:1,e:'Todo clone contém o histórico inteiro, por isso é possível trabalhar offline e qualquer cópia serve de backup.'}]},
+
+{id:'instalacao',title:'Instalação e configuração inicial',min:7,body:()=>`
+<h2>Instalando o Git</h2>
+<table><tr><th>Sistema</th><th>Como instalar</th></tr>
+<tr><td><b>Windows</b></td><td>Baixe em <a href="https://git-scm.com/downloads" target="_blank" rel="noopener">git-scm.com</a> (inclui o <i>Git Bash</i>) ou use <code>winget install Git.Git</code>.</td></tr>
+<tr><td><b>macOS</b></td><td><code>brew install git</code> ou rode <code>git --version</code> e aceite instalar as Xcode Command Line Tools.</td></tr>
+<tr><td><b>Linux</b></td><td><code>sudo apt install git</code> (Debian/Ubuntu) · <code>sudo dnf install git</code> (Fedora)</td></tr></table>
+${C(`
+$ git --version
+git version 2.47.0`)}
+<h2>Apresente-se ao Git</h2>
+<p>Todo commit leva nome e e-mail. Configure uma vez, globalmente:</p>
+${C(`
+$ git config --global user.name "Seu Nome"
+$ git config --global user.email "voce@exemplo.com"
+$ git config --global init.defaultBranch main
+$ git config --global core.editor "code --wait"   # VS Code como editor
+$ git config --global pull.rebase false`)}
+${tip('<p>Use no Git o <b>mesmo e-mail da sua conta do GitHub</b> (ou o e-mail <code>noreply</code> que o GitHub oferece nas configurações). Assim seus commits aparecem no seu perfil.</p>')}
+<h2>Os três níveis de configuração</h2>
+<table><tr><th>Flag</th><th>Escopo</th><th>Arquivo</th></tr>
+<tr><td><code>--system</code></td><td>Todos os usuários da máquina</td><td><code>/etc/gitconfig</code></td></tr>
+<tr><td><code>--global</code></td><td>Seu usuário</td><td><code>~/.gitconfig</code></td></tr>
+<tr><td><code>--local</code></td><td>Somente o repositório atual</td><td><code>.git/config</code></td></tr></table>
+${C(`
+$ git config --list --show-origin
+$ git config user.name`)}
+<h2>Aliases: atalhos para o que você mais usa</h2>
+${C(`
+$ git config --global alias.st "status -sb"
+$ git config --global alias.lg "log --oneline --graph --decorate --all"
+$ git config --global alias.co "checkout"`)}
+<p>Depois disso, <code>git lg</code> mostra a árvore de commits de forma compacta.</p>
+`,quiz:[
+{q:'Qual comando define seu nome para todos os repositórios da máquina?',o:['git config user.name "Nome"','git config --global user.name "Nome"','git set name "Nome"','git init --name "Nome"'],a:1,e:'A flag --global grava em ~/.gitconfig e vale para todos os seus repositórios.'},
+{q:'Onde fica a configuração "local" de um repositório?',o:['~/.gitconfig','/etc/gitconfig','.git/config','package.json'],a:2,e:'--local escreve em .git/config, dentro do repositório.'}]},
+
+{id:'github-conta',title:'Criando sua conta e conectando via SSH',min:8,body:()=>`
+<h2>Conta no GitHub</h2>
+<ol><li>Acesse <a href="https://github.com/signup" target="_blank" rel="noopener">github.com/signup</a> e crie a conta.</li>
+<li>Ative a <b>autenticação em dois fatores (2FA)</b> em <i>Settings → Password and authentication</i>.</li>
+<li>Complete seu perfil (foto, bio) — ele é seu portfólio.</li></ol>
+<h2>Como o Git se autentica no GitHub</h2>
+<p>Para enviar código (<code>push</code>) o GitHub precisa saber quem você é. Há duas formas comuns — o GitHub <b>não aceita mais senha</b> pela linha de comando:</p>
+<div class="grid">
+<div class="card"><h3 style="margin-top:0">🔑 SSH (recomendado)</h3><p>Um par de chaves: a privada fica com você, a pública vai para o GitHub. Sem digitar nada depois de configurar.</p></div>
+<div class="card"><h3 style="margin-top:0">🌐 HTTPS + token</h3><p>URL <code>https://…</code> e um <i>Personal Access Token</i> no lugar da senha. O <b>Git Credential Manager</b> (já incluso no Windows) cuida disso para você.</p></div>
+</div>
+<h2>Configurando SSH passo a passo</h2>
+${C(`
+$ ssh-keygen -t ed25519 -C "voce@exemplo.com"
+Enter file in which to save the key (~/.ssh/id_ed25519): [Enter]
+Enter passphrase (empty for no passphrase): [crie uma senha]
+
+$ eval "$(ssh-agent -s)"
+$ ssh-add ~/.ssh/id_ed25519
+
+$ cat ~/.ssh/id_ed25519.pub
+ssh-ed25519 AAAAC3Nza... voce@exemplo.com`)}
+<ol><li>Copie <b>toda</b> a saída do último comando (é a chave <i>pública</i>).</li>
+<li>No GitHub: <i>Settings → SSH and GPG keys → New SSH key</i> e cole.</li>
+<li>Teste:</li></ol>
+${C(`
+$ ssh -T git@github.com
+Hi seu-usuario! You've successfully authenticated, but GitHub does not provide shell access.`)}
+${danger('<p><b>Nunca</b> compartilhe a chave privada (<code>id_ed25519</code>, sem <code>.pub</code>) nem cole tokens em commits. Se vazar, revogue imediatamente.</p>')}
+`,quiz:[
+{q:'Qual arquivo você cola no GitHub ao configurar SSH?',o:['id_ed25519 (chave privada)','id_ed25519.pub (chave pública)','.gitconfig','known_hosts'],a:1,e:'Somente a chave pública (.pub) vai para o GitHub. A privada nunca sai da sua máquina.'}]}
+]},
+
+/* ---------------- 2 ---------------- */
+{id:'m2',title:'Seu primeiro repositório',desc:'init, add, commit e os três estados dos arquivos.',lessons:[
+{id:'init-commit',title:'init, status, add e commit',min:10,body:()=>`
+<h2>Criando um repositório</h2>
+${C(`
+$ mkdir meu-projeto
+$ cd meu-projeto
+$ git init
+Initialized empty Git repository in .../meu-projeto/.git/`)}
+<p>Pronto: agora existe uma pasta oculta <code>.git</code>. Apagá-la apaga o histórico — mas o projeto continua lá.</p>
+<h2>O ciclo básico</h2>
+${C(`
+$ echo "# Meu Projeto" > README.md
+$ git status
+On branch main
+Untracked files:
+	README.md
+
+$ git add README.md
+$ git commit -m "docs: adiciona README inicial"
+[main (root-commit) 4f1c2a9] docs: adiciona README inicial
+ 1 file changed, 1 insertion(+)`)}
+<h2>Os três estados (e as três áreas)</h2>
+<p>Esta é a ideia mais importante do Git. Brinque com o widget abaixo:</p>
+<div class="card" data-widget="areas"></div>
+<table><tr><th>Área</th><th>O que é</th></tr>
+<tr><td><b>Working Directory</b></td><td>Os arquivos como estão na sua pasta agora.</td></tr>
+<tr><td><b>Staging Area (index)</b></td><td>A "caixa de envio": o que vai entrar no próximo commit.</td></tr>
+<tr><td><b>Repository</b></td><td>O histórico de commits em <code>.git</code>.</td></tr></table>
+${tip('<p>Staging existe para você montar commits <b>coesos</b>. Alterou cinco arquivos mas são duas ideias diferentes? Faça <code>git add</code> só dos arquivos de cada ideia e dois commits separados.</p>')}
+<h2>Atalhos úteis</h2>
+${C(`
+$ git add .              # adiciona tudo (novos + modificados) da pasta atual
+$ git add -p             # escolhe trechos (hunks) interativamente
+$ git commit -am "msg"   # add dos arquivos JÁ rastreados + commit
+$ git status -sb         # versão curta e compacta`)}
+<div class="call info"><b class="t">Pratique agora</b><p>Abra o <a href="#/lab">Laboratório</a> e execute: <code>git init</code>, <code>touch a.txt</code>, <code>git add .</code>, <code>git commit -m "primeiro"</code>.</p></div>
+`,quiz:[
+{q:'O que faz "git add arquivo.txt"?',o:['Cria o commit','Move o arquivo para a staging area','Envia para o GitHub','Cria o arquivo vazio'],a:1,e:'git add coloca a versão atual do arquivo na staging area, preparando-o para o próximo commit.'},
+{q:'Você alterou um arquivo que já estava rastreado. Qual atalho faz add + commit juntos?',o:['git commit -m "msg" --all-files','git commit -am "msg"','git add commit "msg"','git push -a'],a:1,e:'-a inclui automaticamente os arquivos rastreados modificados (não inclui arquivos novos/untracked).'},
+{q:'Em qual área ficam os arquivos que serão incluídos no PRÓXIMO commit?',o:['Working Directory','Staging Area','Remote','Stash'],a:1,e:'A staging area (index) guarda o snapshot que será confirmado no próximo commit.'}]},
+
+{id:'boas-mensagens',title:'Mensagens de commit que contam uma história',min:6,body:()=>`
+<p class="lead">Daqui a seis meses, <code>git log</code> será a documentação do <i>porquê</i> o código é como é. Escreva pensando nessa pessoa — provavelmente você.</p>
+<h2>Anatomia de uma boa mensagem</h2>
+${C(`
+feat(auth): permite login com conta Google
+
+Adiciona o fluxo OAuth2 usando a biblioteca oficial. O login por
+e-mail continua funcionando. Sessões agora expiram em 7 dias.
+
+Closes #42`,'mensagem de commit')}
+<ul><li><b>Linha de título</b>: até ~50 caracteres, no imperativo ("adiciona", "corrige"), sem ponto final.</li>
+<li><b>Linha em branco</b>, depois o <b>corpo</b> explicando <i>o quê e por quê</i> (o "como" o código já mostra).</li>
+<li><b>Rodapé</b>: referências a issues (<code>Closes #42</code>).</li></ul>
+<h2>Conventional Commits</h2>
+<p>Um padrão popular que facilita changelogs e versionamento automático:</p>
+<table><tr><th>Tipo</th><th>Uso</th></tr>
+<tr><td><code>feat</code></td><td>Nova funcionalidade</td></tr><tr><td><code>fix</code></td><td>Correção de bug</td></tr>
+<tr><td><code>docs</code></td><td>Somente documentação</td></tr><tr><td><code>refactor</code></td><td>Mudança interna sem alterar comportamento</td></tr>
+<tr><td><code>test</code></td><td>Testes</td></tr><tr><td><code>chore</code></td><td>Build, dependências, tarefas de manutenção</td></tr>
+<tr><td><code>style</code></td><td>Formatação, sem mudar lógica</td></tr></table>
+<div class="grid"><div class="card"><b style="color:var(--red)">✗ Ruim</b><br><code>fix</code> · <code>mudanças</code> · <code>asdf</code> · <code>agora vai</code></div>
+<div class="card"><b style="color:var(--green)">✓ Bom</b><br><code>fix(cart): evita total negativo com cupom expirado</code></div></div>
+${tip('<p><b>Commits pequenos e frequentes</b> > um commitzão gigante. Cada commit deve ser uma mudança lógica que compila e (idealmente) passa nos testes.</p>')}
+`,quiz:[
+{q:'Qual mensagem segue melhor as boas práticas?',o:['mudei umas coisas','fix: corrige cálculo de frete para CEPs do Norte','Arrumando bug!!!','update'],a:1,e:'É curta, no imperativo, tem tipo e diz exatamente o que foi corrigido.'}]},
+
+{id:'gitignore',title:'.gitignore: o que NÃO versionar',min:5,body:()=>`
+<p>Nem tudo pertence ao repositório: dependências, builds, logs, segredos. O arquivo <code>.gitignore</code> diz ao Git o que ignorar.</p>
+${C(`
+# dependências
+node_modules/
+venv/
+
+# build
+dist/
+build/
+*.class
+
+# segredos e ambiente
+.env
+*.pem
+
+# sistema/editor
+.DS_Store
+Thumbs.db
+.vscode/
+*.log
+
+# exceção: mantenha este arquivo
+!.env.example`,'.gitignore')}
+<h2>Regras de padrão</h2>
+<table><tr><th>Padrão</th><th>Efeito</th></tr>
+<tr><td><code>*.log</code></td><td>Qualquer arquivo terminando em .log</td></tr>
+<tr><td><code>pasta/</code></td><td>A pasta e tudo dentro dela</td></tr>
+<tr><td><code>/arquivo</code></td><td>Somente na raiz do repositório</td></tr>
+<tr><td><code>**/temp</code></td><td>Qualquer pasta "temp" em qualquer nível</td></tr>
+<tr><td><code>!importante.log</code></td><td>Exceção: NÃO ignore este</td></tr></table>
+${warn('<p>O <code>.gitignore</code> só afeta arquivos <b>ainda não rastreados</b>. Se já fez commit de um arquivo, é preciso removê-lo do índice:</p>'+C(`
+$ git rm --cached .env
+$ git commit -m "chore: para de versionar .env"`))}
+${danger('<p>Se você commitou uma senha ou token, <b>trate-o como vazado</b>: revogue/troque a credencial. Apagar do histórico não basta, pois cópias podem existir.</p>')}
+${tip('<p>Gere um <code>.gitignore</code> pronto para sua linguagem em <a href="https://gitignore.io" target="_blank" rel="noopener">gitignore.io</a> ou nos templates do próprio GitHub ao criar um repositório.</p>')}
+`,quiz:[
+{q:'Você adicionou .env ao .gitignore, mas ele já havia sido commitado. O que fazer?',o:['Nada, o Git passa a ignorar automaticamente','git rm --cached .env e novo commit','Apagar a pasta .git','git ignore .env'],a:1,e:'O .gitignore não afeta arquivos já rastreados. Use git rm --cached para parar de rastrear (mantendo o arquivo local). E troque as credenciais expostas!'}]}
+]},
+
+/* ---------------- 3 ---------------- */
+{id:'m3',title:'Histórico e desfazendo coisas',desc:'log, diff, restore, reset, revert e amend.',lessons:[
+{id:'log-diff',title:'Explorando o histórico: log, diff e show',min:8,body:()=>`
+<h2>git log</h2>
+${C(`
+$ git log
+commit 4f1c2a9d... (HEAD -> main)
+Author: Ana <ana@exemplo.com>
+Date:   Mon Nov 24 10:12:00 2026
+
+    feat: adiciona login
+
+$ git log --oneline
+4f1c2a9 feat: adiciona login
+b7d3e10 docs: README inicial`)}
+<h3>Opções que valem ouro</h3>
+${C(`
+$ git log --oneline --graph --decorate --all   # árvore visual de todas as branches
+$ git log -5                                    # últimos 5 commits
+$ git log --author="Ana"                        # filtrar por autor
+$ git log --since="2 weeks ago"                 # por data
+$ git log --grep="login"                        # buscar na mensagem
+$ git log -p arquivo.js                         # histórico + mudanças de um arquivo
+$ git log -S"minhaFuncao"                       # quando esse texto foi adicionado/removido?
+$ git log main..feature                         # commits que estão em feature mas não em main`)}
+<h2>git diff</h2>
+<p>Mostra <i>o que mudou</i> linha a linha. Saber qual comparação cada variante faz é essencial:</p>
+<table><tr><th>Comando</th><th>Compara</th></tr>
+<tr><td><code>git diff</code></td><td>Working directory × staging (mudanças <b>não</b> staged)</td></tr>
+<tr><td><code>git diff --staged</code></td><td>Staging × último commit (o que <b>vai</b> no commit)</td></tr>
+<tr><td><code>git diff HEAD</code></td><td>Working directory × último commit (tudo)</td></tr>
+<tr><td><code>git diff A B</code></td><td>Dois commits/branches quaisquer</td></tr></table>
+${C(`
+$ git diff
+diff --git a/app.js b/app.js
+--- a/app.js
++++ b/app.js
+@@ -1,3 +1,3 @@
+-const nome = "mundo";
++const nome = "Git";
+ console.log("Olá, " + nome);`)}
+<h2>git show</h2>
+${C(`
+$ git show 4f1c2a9          # detalhes + diff de um commit
+$ git show HEAD~2           # dois commits atrás
+$ git show main:README.md   # um arquivo como estava na main`)}
+${info('<p><code>HEAD</code> é o commit onde você está. <code>HEAD~1</code> é o pai, <code>HEAD~2</code> o avô, e <code>HEAD^2</code> é o segundo pai de um commit de merge.</p>')}
+`,quiz:[
+{q:'Qual comando mostra o que está na staging e VAI entrar no próximo commit?',o:['git diff','git diff --staged','git log -p','git status -v2'],a:1,e:'git diff --staged (ou --cached) compara a staging com o último commit.'},
+{q:'Como ver uma árvore compacta de todas as branches?',o:['git log --oneline --graph --all','git tree','git branch --log','git show --all'],a:0,e:'--oneline deixa compacto, --graph desenha a árvore e --all inclui todas as branches.'}]},
+
+{id:'desfazer',title:'Desfazendo: restore, reset, revert, amend',min:12,body:()=>`
+<p class="lead">Errar é normal. A chave é saber <i>qual</i> ferramenta usar conforme o ponto onde o erro está.</p>
+<h2>Mapa de decisão</h2>
+<table><tr><th>Situação</th><th>Comando</th></tr>
+<tr><td>Editei um arquivo e quero <b>descartar</b> a edição</td><td><code>git restore arquivo</code></td></tr>
+<tr><td>Dei <code>git add</code> sem querer</td><td><code>git restore --staged arquivo</code></td></tr>
+<tr><td>Esqueci um arquivo / errei a mensagem do <b>último commit</b></td><td><code>git commit --amend</code></td></tr>
+<tr><td>Quero <b>desfazer commits locais</b> (não publicados)</td><td><code>git reset</code></td></tr>
+<tr><td>Quero desfazer um commit <b>já publicado</b></td><td><code>git revert</code></td></tr></table>
+<h2>restore</h2>
+${C(`
+$ git restore app.js              # joga fora as mudanças não commitadas (irreversível!)
+$ git restore --staged app.js     # tira da staging, mantém a edição
+$ git restore --source=HEAD~2 app.js   # traz a versão de 2 commits atrás`)}
+<h2>commit --amend</h2>
+${C(`
+$ git add arquivo-esquecido.js
+$ git commit --amend --no-edit    # inclui no último commit, mantém a mensagem
+$ git commit --amend -m "nova mensagem"`)}
+${warn('<p><code>--amend</code> <b>reescreve</b> o commit (muda o hash). Só use em commits que ainda não foram enviados ao remoto.</p>')}
+<h2>reset: mover o ponteiro da branch</h2>
+<p>Três modos, conforme o quanto ele desfaz:</p>
+<div class="grid">
+<div class="card"><h3 style="margin-top:0"><code>--soft</code></h3><p>Move a branch. Mudanças ficam <b>staged</b>. Ótimo para "juntar" commits.</p></div>
+<div class="card"><h3 style="margin-top:0"><code>--mixed</code> (padrão)</h3><p>Move a branch e limpa a staging. Mudanças ficam no <b>working directory</b>.</p></div>
+<div class="card"><h3 style="margin-top:0"><code>--hard</code></h3><p>Move a branch e <b>apaga</b> as mudanças dos arquivos. Perigoso!</p></div></div>
+${C(`
+$ git reset --soft HEAD~1    # desfaz o commit, mantém tudo staged
+$ git reset HEAD~1           # desfaz o commit, mantém arquivos modificados
+$ git reset --hard HEAD~1    # desfaz o commit E descarta as alterações
+$ git reset --hard origin/main   # iguala sua branch à do remoto`)}
+<h2>revert: desfazer sem reescrever a história</h2>
+<p>Cria um <b>novo commit</b> que inverte as mudanças de um commit anterior. É a forma segura em branches compartilhadas.</p>
+${C(`
+$ git revert 4f1c2a9
+[main 9ab81cd] Revert "feat: adiciona login"`)}
+${danger('<p>Regra de ouro: <b>nunca reescreva história pública</b> (<code>reset</code>, <code>amend</code>, <code>rebase</code> em commits já enviados e usados por outras pessoas). Para isso, use <code>revert</code>.</p>')}
+${tip('<p>Apagou algo com <code>reset --hard</code>? Calma: veja <a href="#/reflog">reflog</a>, que costuma salvar a situação.</p>')}
+`,quiz:[
+{q:'Um commit com bug já foi enviado para a main compartilhada. O mais seguro é:',o:['git reset --hard HEAD~1 e push --force','git revert <hash>','Apagar o repositório','git commit --amend'],a:1,e:'revert cria um novo commit que desfaz o anterior sem reescrever o histórico que outras pessoas já baixaram.'},
+{q:'Qual modo de reset descarta também as alterações nos arquivos?',o:['--soft','--mixed','--hard','--keep-all'],a:2,e:'--hard altera ponteiro, staging e working directory. Use com muito cuidado.'},
+{q:'Você fez git add errado. Como tirar o arquivo da staging mantendo as edições?',o:['git restore --staged arquivo','git restore arquivo','git reset --hard','git rm arquivo'],a:0,e:'restore --staged remove da staging sem tocar na edição do arquivo.'}]}
+]},
+
+/* ---------------- 4 ---------------- */
+{id:'m4',title:'Branches e merge',desc:'Trabalhe em paralelo sem medo.',lessons:[
+{id:'branches',title:'Branches: linhas paralelas de trabalho',min:9,body:()=>`
+<p class="lead">Uma branch é só um <b>ponteiro leve</b> para um commit. Criar uma custa quase nada — por isso, no Git, usamos branches para tudo.</p>
+<h2>Por que usar branches?</h2>
+<ul><li>Desenvolver uma funcionalidade sem quebrar a <code>main</code>.</li><li>Corrigir um bug urgente enquanto outra coisa está pela metade.</li><li>Experimentar ideias — descartar é só apagar a branch.</li></ul>
+<h2>Comandos essenciais</h2>
+${C(`
+$ git branch                     # lista branches locais (a atual tem *)
+$ git branch -a                  # inclui as remotas
+$ git branch feature/login       # cria (mas não muda para ela)
+$ git switch feature/login       # muda para ela
+$ git switch -c feature/login    # cria E muda (atalho)
+$ git branch -m novo-nome        # renomeia a branch atual
+$ git branch -d feature/login    # apaga (só se já mergeada)
+$ git branch -D feature/login    # força apagar`)}
+${info('<p><code>git switch</code> e <code>git restore</code> (Git 2.23+) dividiram as funções do antigo <code>git checkout</code>. Você ainda verá <code>git checkout -b nome</code> em tutoriais — faz o mesmo que <code>switch -c</code>.</p>')}
+<h2>O que é HEAD?</h2>
+<p><code>HEAD</code> aponta para a branch em que você está (e, através dela, para o commit atual). Quando você commita, a branch avança e o HEAD vai junto.</p>
+<h2>Convenção de nomes</h2>
+<p>Prefixos ajudam a organizar: <code>feature/…</code>, <code>fix/…</code>, <code>hotfix/…</code>, <code>docs/…</code>, <code>chore/…</code>. Ex.: <code>feature/carrinho-de-compras</code>.</p>
+<div class="call info"><b class="t">Pratique agora</b><p>No <a href="#/lab">Laboratório</a>, faça um commit, crie <code>git switch -c feature</code>, faça outro commit e veja o gráfico se dividir.</p></div>
+`,quiz:[
+{q:'O que é uma branch no Git?',o:['Uma cópia completa de todos os arquivos','Um ponteiro móvel para um commit','Um servidor remoto','Uma pasta dentro de .git'],a:1,e:'Branches são ponteiros leves; por isso criá-las é instantâneo e barato.'},
+{q:'Qual comando cria uma branch e já muda para ela?',o:['git branch -c x','git switch -c x','git new x','git merge x'],a:1,e:'git switch -c x (ou git checkout -b x).'}]},
+
+{id:'merge',title:'Merge e resolução de conflitos',min:12,body:()=>`
+<h2>Fazendo merge</h2>
+<p>Para trazer o trabalho de <code>feature</code> para <code>main</code>: vá para a branch que <b>recebe</b> e mescle a outra.</p>
+${C(`
+$ git switch main
+$ git merge feature/login`)}
+<h2>Dois tipos de merge</h2>
+<div class="grid">
+<div class="card"><h3 style="margin-top:0">⏩ Fast-forward</h3><p>A <code>main</code> não andou desde que você criou a branch. O Git só avança o ponteiro. Sem commit de merge.</p></div>
+<div class="card"><h3 style="margin-top:0">🔀 Three-way</h3><p>Ambas as branches têm commits novos. O Git cria um <b>commit de merge</b> com dois pais.</p></div></div>
+${C(`
+$ git merge --no-ff feature/login   # força commit de merge, mesmo sendo possível fast-forward
+$ git merge --abort                 # desiste de um merge com conflito`)}
+<h2>Conflitos</h2>
+<p>Quando duas branches alteram <b>as mesmas linhas</b>, o Git não decide por você:</p>
+${C(`
+$ git merge feature
+Auto-merging app.js
+CONFLICT (content): Merge conflict in app.js
+Automatic merge failed; fix conflicts and then commit the result.`)}
+<p>O arquivo fica marcado assim:</p>
+${C(`
+<<<<<<< HEAD
+const titulo = "Bem-vindo";
+=======
+const titulo = "Olá, visitante";
+>>>>>>> feature`,'app.js')}
+<ol><li>Entre <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</code> e <code>=======</code> está a <b>sua</b> versão (branch atual).</li>
+<li>Entre <code>=======</code> e <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code> está a versão <b>que chega</b>.</li>
+<li>Edite o arquivo deixando o resultado final correto e <b>apague os marcadores</b>.</li>
+<li>Finalize:</li></ol>
+${C(`
+$ git add app.js
+$ git commit          # a mensagem de merge já vem preenchida`)}
+${tip('<p>O VS Code mostra botões <i>Accept Current / Accept Incoming / Accept Both</i> sobre cada conflito. <code>git mergetool</code> abre uma ferramenta visual de três painéis.</p>')}
+<div class="call info"><b class="t">Pratique agora</b><p>O <a href="#/lab">Laboratório</a> tem o desafio "Resolva um conflito". Crie dois commits diferentes na mesma linha do mesmo arquivo em branches distintas e faça o merge.</p></div>
+`,quiz:[
+{q:'Quando ocorre um fast-forward?',o:['Quando há conflito','Quando a branch de destino não teve novos commits desde a criação da outra','Sempre que se usa merge','Quando se usa --no-ff'],a:1,e:'Se a linha é reta, o Git apenas avança o ponteiro; não precisa de commit de merge.'},
+{q:'Depois de editar um arquivo em conflito, o que fazer?',o:['git merge --continue sem mais nada','git add do arquivo e git commit','Apagar a branch','git reset --hard'],a:1,e:'Marque como resolvido com git add e conclua o merge com git commit.'},
+{q:'Como cancelar um merge que deu conflito?',o:['git merge --abort','git undo','git revert --all','git stash drop'],a:0,e:'git merge --abort volta ao estado anterior ao merge.'}]},
+
+{id:'rebase',title:'Rebase: reescrevendo a base',min:9,body:()=>`
+<p><code>rebase</code> é outra forma de integrar mudanças: em vez de criar um commit de merge, ele <b>replica</b> seus commits em cima de outra base, resultando em uma história linear.</p>
+${C(`
+$ git switch feature
+$ git rebase main      # reaplica os commits da feature sobre a ponta atual da main`)}
+<div class="tablewrap"><table><tr><th></th><th>merge</th><th>rebase</th></tr>
+<tr><td>História</td><td>Preserva exatamente o que aconteceu (com bifurcações)</td><td>Linear e limpa</td></tr>
+<tr><td>Commits</td><td>Mantém os originais + 1 commit de merge</td><td>Cria <b>novos</b> commits (hashes mudam)</td></tr>
+<tr><td>Segurança</td><td>Não reescreve nada</td><td>Reescreve história</td></tr></table></div>
+${danger('<p><b>Regra de ouro do rebase:</b> nunca faça rebase de commits que já foram enviados e que outras pessoas usam. Rebase na <i>sua</i> branch de feature local ou ainda não compartilhada: ótimo.</p>')}
+<h2>Rebase interativo: limpando a história</h2>
+${C(`
+$ git rebase -i HEAD~4`)}
+<p>Abre uma lista com os 4 últimos commits, onde você pode mudar a palavra inicial de cada um:</p>
+${C(`
+pick   a1b2c3d feat: cria tela de login
+squash e4f5a6b wip
+squash 7c8d9e0 corrige typo
+reword 1a2b3c4 estiliza botão`,'editor do rebase -i')}
+<table><tr><th>Comando</th><th>Efeito</th></tr>
+<tr><td><code>pick</code></td><td>Mantém o commit</td></tr><tr><td><code>reword</code></td><td>Mantém, mas edita a mensagem</td></tr>
+<tr><td><code>squash</code></td><td>Funde no commit anterior (juntando mensagens)</td></tr><tr><td><code>fixup</code></td><td>Funde, descartando a mensagem</td></tr>
+<tr><td><code>drop</code></td><td>Remove o commit</td></tr></table>
+<p>Se travar no meio: <code>git rebase --continue</code> (após resolver conflitos) ou <code>git rebase --abort</code>.</p>
+${tip('<p>Depois de um rebase em uma branch que já estava no GitHub, será preciso <code>git push --force-with-lease</code> — mais seguro que <code>--force</code>, pois recusa se alguém enviou algo novo.</p>')}
+`,quiz:[
+{q:'Qual a principal diferença do rebase em relação ao merge?',o:['Rebase é mais rápido sempre','Rebase reaplica os commits criando uma história linear (com novos hashes)','Rebase apaga a branch','Não há diferença'],a:1,e:'O rebase reescreve os commits sobre uma nova base, deixando a história linear — mas alterando os hashes.'},
+{q:'Quando NÃO se deve fazer rebase?',o:['Em commits locais não publicados','Em commits já publicados que outras pessoas usam','Antes de abrir um PR','Em branch própria de feature'],a:1,e:'Reescrever história pública quebra o repositório de quem já baixou esses commits.'}]}
+]},
+
+/* ---------------- 5 ---------------- */
+{id:'m5',title:'Remotos e GitHub',desc:'clone, push, pull, fetch e tracking.',lessons:[
+{id:'remotos',title:'Conectando local ↔ GitHub',min:11,body:()=>`
+<h2>Dois caminhos para começar</h2>
+<h3>A) Já tenho um repositório local → envio para o GitHub</h3>
+<ol><li>No GitHub: <b>New repository</b> (sem README, para vir vazio).</li><li>Copie a URL SSH e conecte:</li></ol>
+${C(`
+$ git remote add origin git@github.com:seu-usuario/meu-projeto.git
+$ git branch -M main
+$ git push -u origin main`)}
+<p><code>origin</code> é só o apelido padrão do remoto. O <code>-u</code> grava o vínculo (<i>upstream</i>), de modo que depois basta <code>git push</code> ou <code>git pull</code>.</p>
+<h3>B) O projeto já está no GitHub → baixo uma cópia</h3>
+${C(`
+$ git clone git@github.com:usuario/projeto.git
+$ cd projeto`)}
+<h2>push, fetch e pull</h2>
+<div class="grid">
+<div class="card"><h3 style="margin-top:0">⬆ push</h3><p>Envia seus commits locais para o remoto.</p></div>
+<div class="card"><h3 style="margin-top:0">⬇ fetch</h3><p>Baixa novidades do remoto, mas <b>não altera</b> seus arquivos. Atualiza <code>origin/main</code>.</p></div>
+<div class="card"><h3 style="margin-top:0">⤓ pull</h3><p><code>fetch</code> + <code>merge</code> (ou rebase) na branch atual.</p></div></div>
+${C(`
+$ git push                       # envia a branch atual
+$ git fetch                      # só atualiza as referências remotas
+$ git pull                       # fetch + merge
+$ git pull --rebase              # fetch + rebase (história mais limpa)
+$ git remote -v                  # lista remotos
+$ git branch -vv                 # mostra com qual remoto cada branch está ligada`)}
+<h2>Branches remotas</h2>
+<p><code>origin/main</code> é a <b>sua cópia local da posição</b> da <code>main</code> no GitHub, atualizada a cada <code>fetch</code>/<code>pull</code>/<code>push</code>.</p>
+${C(`
+$ git status
+On branch main
+Your branch is behind 'origin/main' by 2 commits, and can be fast-forwarded.
+
+$ git push -u origin feature/login    # publica uma branch nova
+$ git push origin --delete feature/login   # apaga a branch no remoto`)}
+${warn('<p>Se o <code>push</code> for rejeitado (<i>non-fast-forward</i>), alguém enviou commits antes de você. Faça <code>git pull</code>, resolva possíveis conflitos e tente novamente. Evite <code>--force</code>.</p>')}
+`,quiz:[
+{q:'Qual a diferença entre fetch e pull?',o:['Nenhuma','fetch só baixa as novidades; pull baixa e integra (merge/rebase) na branch atual','pull só funciona com SSH','fetch envia commits'],a:1,e:'fetch é seguro e só atualiza as referências remotas. pull = fetch + integração.'},
+{q:'O que "-u" faz em "git push -u origin main"?',o:['Força o envio','Define o upstream, vinculando a branch local à remota','Atualiza o Git','Apaga a branch remota'],a:1,e:'Com o upstream configurado, git push/pull passam a funcionar sem argumentos.'},
+{q:'Seu push foi rejeitado por non-fast-forward. O que fazer primeiro?',o:['git push --force','git pull (integrar) e depois push','Apagar o repositório','Criar outro remoto'],a:1,e:'Alguém enviou commits antes de você; integre-os com pull antes de enviar.'}]},
+
+{id:'perfil-repo',title:'Anatomia de um bom repositório',min:6,body:()=>`
+<p class="lead">Um repositório é a vitrine do seu trabalho. Alguns arquivos transformam um amontoado de código em um projeto profissional.</p>
+<table><tr><th>Arquivo</th><th>Para quê</th></tr>
+<tr><td><code>README.md</code></td><td>Primeira coisa que as pessoas leem: o que é, como instalar, como usar.</td></tr>
+<tr><td><code>LICENSE</code></td><td>Define o que os outros podem fazer com seu código (MIT, Apache-2.0, GPL…). Sem licença, ninguém tem permissão para reutilizá-lo.</td></tr>
+<tr><td><code>.gitignore</code></td><td>Arquivos que não entram no repositório.</td></tr>
+<tr><td><code>CONTRIBUTING.md</code></td><td>Como contribuir: padrões de commit, como rodar testes.</td></tr>
+<tr><td><code>CODE_OF_CONDUCT.md</code></td><td>Regras de convivência da comunidade.</td></tr>
+<tr><td><code>.github/</code></td><td>Templates de issue/PR, workflows de Actions, CODEOWNERS.</td></tr></table>
+<h2>Esqueleto de um README</h2>
+${C(`
+# Nome do Projeto
+Uma frase explicando o que ele faz.
+
+## ✨ Funcionalidades
+- Item 1
+- Item 2
+
+## 🚀 Como rodar
+    npm install
+    npm start
+
+## 🧪 Testes
+    npm test
+
+## 🤝 Contribuindo
+Veja CONTRIBUTING.md.
+
+## 📄 Licença
+MIT`,'README.md')}
+${tip('<p>Adicione prints/GIFs, badges de CI e um exemplo mínimo de uso. Um bom README aumenta muito as chances de alguém usar (ou contratar você por) o projeto.</p>')}
+`,quiz:[
+{q:'Por que um repositório público deve ter LICENSE?',o:['É obrigatório pelo GitHub','Sem licença, outras pessoas não têm permissão legal para reutilizar o código','Deixa o repositório mais rápido','Habilita o GitHub Actions'],a:1,e:'Sem licença, vale o copyright padrão: ninguém pode legalmente usar, modificar ou distribuir seu código.'}]}
+]},
+
+/* ---------------- 6 ---------------- */
+{id:'m6',title:'Colaboração no GitHub',desc:'Pull Requests, forks, issues e code review.',lessons:[
+{id:'pull-request',title:'Pull Requests: o coração da colaboração',min:10,body:()=>`
+<p class="lead">Um Pull Request (PR) diz: <i>"fiz mudanças nesta branch; podem revisar e incorporar à main?"</i> É onde discussão, revisão e testes automáticos acontecem antes do merge.</p>
+<h2>Fluxo completo, passo a passo</h2>
+${C(`
+$ git switch main && git pull                  # 1. comece atualizado
+$ git switch -c feature/busca                  # 2. crie sua branch
+# ... programe ...
+$ git add . && git commit -m "feat: adiciona busca por nome"   # 3. commit(s)
+$ git push -u origin feature/busca             # 4. publique a branch`)}
+<ol start="5"><li>No GitHub aparece um banner <b>"Compare &amp; pull request"</b>. Clique.</li>
+<li>Escreva um bom título e descrição (o quê, por quê, como testar, prints).</li>
+<li>Peça <b>reviewers</b>, adicione <b>labels</b> e vincule a issue (<code>Closes #12</code>).</li>
+<li>Aguarde CI e revisão; responda comentários com novos commits na mesma branch (o PR atualiza sozinho).</li>
+<li>Com aprovação, faça o merge.</li></ol>
+<h2>Três formas de fazer merge no GitHub</h2>
+<table><tr><th>Opção</th><th>Resultado</th><th>Quando usar</th></tr>
+<tr><td><b>Create a merge commit</b></td><td>Mantém todos os commits + commit de merge</td><td>Preservar história completa</td></tr>
+<tr><td><b>Squash and merge</b></td><td>Todos os commits viram <b>um</b></td><td>Branches com vários "wip" — história limpa na main</td></tr>
+<tr><td><b>Rebase and merge</b></td><td>Commits reaplicados linearmente</td><td>Time que prefere história linear</td></tr></table>
+<h2>Um bom template de descrição</h2>
+${C(`
+## O que muda
+Adiciona campo de busca na listagem de produtos.
+
+## Por quê
+Resolve #12 — usuários não encontravam itens.
+
+## Como testar
+1. npm run dev
+2. Digite "camisa" na busca
+
+## Checklist
+- [x] Testes adicionados
+- [ ] Documentação atualizada`,'descrição do PR')}
+${tip('<p>PRs <b>pequenos</b> são revisados mais rápido e com mais atenção. Ideal: uma ideia por PR, até algumas centenas de linhas.</p>')}
+<p>Dica extra: abra um <b>Draft PR</b> cedo para mostrar o andamento e pedir feedback antes de terminar.</p>
+`,quiz:[
+{q:'Depois de abrir um PR, você precisa corrigir algo pedido na revisão. O que faz?',o:['Fecha e abre outro PR','Faz novos commits e dá push na mesma branch','Apaga o repositório','Edita a main direto'],a:1,e:'O PR acompanha a branch: novos commits enviados aparecem automaticamente nele.'},
+{q:'Qual opção de merge junta todos os commits do PR em um só?',o:['Merge commit','Squash and merge','Rebase and merge','Fast-forward'],a:1,e:'Squash and merge comprime todos os commits do PR em um único commit na branch de destino.'}]},
+
+{id:'fork',title:'Fork e contribuição open source',min:8,body:()=>`
+<p class="lead">Quer contribuir com um projeto que não é seu? Você não tem permissão de escrita nele — então faz um <b>fork</b>: uma cópia do repositório na <i>sua</i> conta.</p>
+<h2>O fluxo do fork</h2>
+${C(`
+# 1. clique em "Fork" no GitHub, depois clone O SEU fork
+$ git clone git@github.com:voce/projeto.git
+$ cd projeto
+
+# 2. aponte um segundo remoto para o repositório original
+$ git remote add upstream git@github.com:dono/projeto.git
+$ git remote -v
+origin    git@github.com:voce/projeto.git (fetch)
+upstream  git@github.com:dono/projeto.git (fetch)
+
+# 3. branch, mudanças, push para o SEU fork
+$ git switch -c fix/typo-readme
+$ git commit -am "docs: corrige typo no README"
+$ git push -u origin fix/typo-readme
+
+# 4. abra o PR do seu fork para o repositório original`)}
+<h2>Mantendo o fork atualizado</h2>
+${C(`
+$ git fetch upstream
+$ git switch main
+$ git merge upstream/main     # ou: git rebase upstream/main
+$ git push origin main`)}
+<h2>Como ser um bom contribuidor</h2>
+<ul><li>Leia <code>CONTRIBUTING.md</code> e <code>CODE_OF_CONDUCT.md</code> antes de tudo.</li>
+<li>Procure issues com as labels <code>good first issue</code> ou <code>help wanted</code>.</li>
+<li>Comente na issue que vai trabalhar nela para evitar trabalho duplicado.</li>
+<li>Seja gentil e paciente: mantenedores são, em geral, voluntários.</li></ul>
+${info('<p>Dica: <a href="https://github.com/firstcontributions/first-contributions" target="_blank" rel="noopener">first-contributions</a> é um repositório feito para você praticar seu primeiro PR.</p>')}
+`,quiz:[
+{q:'Para que serve o remoto "upstream" em um fork?',o:['Enviar código para o seu fork','Apontar para o repositório original, para buscar atualizações dele','Criar branches','Apagar commits'],a:1,e:'origin = seu fork; upstream = projeto original. Você faz fetch do upstream para se manter sincronizado.'}]},
+
+{id:'issues-review',title:'Issues, Projects e Code Review',min:8,body:()=>`
+<h2>Issues</h2>
+<p>Uma issue é uma unidade de trabalho ou conversa: bug, ideia, tarefa, dúvida. Uma boa issue de bug tem:</p>
+<ul><li>Título claro</li><li>Passos para reproduzir</li><li>Comportamento esperado × observado</li><li>Ambiente (versão, SO, navegador) e prints/logs</li></ul>
+${info('<p>Em commits ou PRs, escreva <code>Closes #12</code>, <code>Fixes #12</code> ou <code>Resolves #12</code> e a issue será fechada automaticamente ao fazer merge na branch padrão.</p>')}
+<p>Use <b>labels</b> (bug, enhancement, good first issue), <b>assignees</b> e <b>milestones</b> para organizar. Templates ficam em <code>.github/ISSUE_TEMPLATE/</code>.</p>
+<h2>GitHub Projects</h2>
+<p>Quadros estilo Kanban (To do → In progress → Done) integrados a issues e PRs, com visões de tabela, quadro e roadmap.</p>
+<h2>Code Review</h2>
+<p>Na aba <b>Files changed</b> você pode comentar linha a linha e, ao final, escolher:</p>
+<table><tr><th>Opção</th><th>Significa</th></tr>
+<tr><td>Comment</td><td>Feedback sem aprovar nem bloquear</td></tr><tr><td>Approve</td><td>Pode ir para o merge</td></tr><tr><td>Request changes</td><td>Precisa de ajustes antes</td></tr></table>
+<h3>Revisando bem</h3>
+<ul><li>Comente o <b>código</b>, não a pessoa. Prefira perguntas: "o que acha de…?"</li>
+<li>Diferencie bloqueios ("precisa mudar") de sugestões ("nit:").</li>
+<li>Use <b>suggested changes</b>: o autor aplica sua sugestão com um clique.</li>
+<li>Reconheça o que está bom — revisão não é só caça a erros.</li></ul>
+<h3>Recebendo review</h3>
+<ul><li>Agradeça e não leve para o lado pessoal.</li><li>Se discordar, explique com argumentos.</li><li>Marque conversas como resolvidas após ajustar.</li></ul>
+`,quiz:[
+{q:'Escrever "Closes #15" na descrição de um PR faz o quê?',o:['Fecha o PR imediatamente','Fecha a issue #15 automaticamente quando o PR for mergeado na branch padrão','Apaga a issue','Nada'],a:1,e:'É a sintaxe de "closing keywords" do GitHub.'}]}
+]},
+
+/* ---------------- 7 ---------------- */
+{id:'m7',title:'Fluxos de trabalho',desc:'GitHub Flow, Git Flow, trunk-based e versionamento.',lessons:[
+{id:'workflows',title:'Escolhendo um fluxo de trabalho',min:8,body:()=>`
+<p class="lead">Git permite qualquer fluxo; times escolhem convenções para não virar bagunça.</p>
+<div class="grid">
+<div class="card"><h3 style="margin-top:0">🟢 GitHub Flow</h3><p>A <code>main</code> está sempre pronta para deploy. Cada mudança = branch curta → PR → revisão → merge → deploy. <b>Simples</b> e ótimo para a maioria dos times web.</p></div>
+<div class="card"><h3 style="margin-top:0">🌳 Git Flow</h3><p>Branches <code>main</code>, <code>develop</code>, <code>feature/*</code>, <code>release/*</code>, <code>hotfix/*</code>. Pensado para produtos com <b>versões numeradas</b> e releases planejadas. Mais cerimônia.</p></div>
+<div class="card"><h3 style="margin-top:0">🚄 Trunk-based</h3><p>Todos integram na <code>main</code> várias vezes ao dia, com branches de horas e feature flags. Exige boa automação de testes.</p></div></div>
+<h2>GitHub Flow em 6 passos</h2>
+<ol><li>Crie uma branch a partir da <code>main</code>.</li><li>Faça commits.</li><li>Abra um Pull Request.</li><li>Revise e rode os testes (CI).</li><li>Faça merge.</li><li>Faça deploy e apague a branch.</li></ol>
+<h2>Versionamento semântico (SemVer)</h2>
+<p>Versões no formato <code>MAJOR.MINOR.PATCH</code>:</p>
+<table><tr><th>Parte</th><th>Aumenta quando…</th><th>Ex.</th></tr>
+<tr><td>MAJOR</td><td>Mudança incompatível (<i>breaking change</i>)</td><td>1.4.2 → <b>2</b>.0.0</td></tr>
+<tr><td>MINOR</td><td>Funcionalidade nova compatível</td><td>1.4.2 → 1.<b>5</b>.0</td></tr>
+<tr><td>PATCH</td><td>Correção de bug compatível</td><td>1.4.2 → 1.4.<b>3</b></td></tr></table>
+${tip('<p>Na dúvida, comece com <b>GitHub Flow</b> + <b>Conventional Commits</b> + <b>proteção da main</b>. Você pode adicionar complexidade depois, se precisar.</p>')}
+`,quiz:[
+{q:'Qual fluxo considera a main sempre pronta para deploy e usa branches curtas + PR?',o:['Git Flow','GitHub Flow','Waterfall','Forking Flow apenas'],a:1,e:'GitHub Flow é simples: branch → PR → merge → deploy.'},
+{q:'Você corrigiu um bug sem alterar APIs. Versão atual 2.3.1. Nova versão?',o:['3.0.0','2.4.0','2.3.2','2.3.1-bug'],a:2,e:'Correção compatível incrementa PATCH: 2.3.2.'}]}
+]},
+
+/* ---------------- 8 ---------------- */
+{id:'m8',title:'Ferramentas avançadas',desc:'stash, tag, cherry-pick, reflog, bisect e mais.',lessons:[
+{id:'stash',title:'stash: guardando trabalho inacabado',min:5,body:()=>`
+<p>Está no meio de uma mudança e precisa trocar de branch para atender algo urgente? Em vez de commitar código pela metade, use o <code>stash</code>: uma gaveta temporária.</p>
+${C(`
+$ git stash                      # guarda mudanças rastreadas e limpa o working dir
+$ git stash push -u -m "wip: busca"   # inclui arquivos novos (untracked) e dá nome
+$ git stash list
+stash@{0}: On feature: wip: busca
+$ git stash pop                  # reaplica o mais recente e remove da lista
+$ git stash apply stash@{1}      # reaplica, mas mantém na lista
+$ git stash drop stash@{0}       # descarta um stash
+$ git stash show -p              # vê o conteúdo`)}
+${tip('<p>O stash é <b>local</b> (não vai para o GitHub) e fácil de esquecer. Se for ficar dias, prefira um commit em uma branch <code>wip/</code>.</p>')}
+`,quiz:[
+{q:'Qual comando guarda mudanças temporariamente e restaura depois?',o:['git stash / git stash pop','git hide / git show','git tag / git untag','git reset / git revert'],a:0,e:'stash guarda, pop reaplica e remove da lista.'}]},
+
+{id:'tags',title:'Tags e releases',min:5,body:()=>`
+<p>Uma <b>tag</b> é um marcador fixo em um commit — normalmente usado para versões (<code>v1.0.0</code>). Diferente de branch, ela não se move.</p>
+${C(`
+$ git tag v1.0.0                       # tag leve
+$ git tag -a v1.0.0 -m "Primeira versão estável"   # tag anotada (recomendada)
+$ git tag                              # lista
+$ git tag -a v0.9.0 4f1c2a9            # marca um commit antigo
+$ git push origin v1.0.0               # tags não vão no push comum!
+$ git push --tags                      # envia todas
+$ git tag -d v1.0.0                    # apaga local`)}
+<h2>GitHub Releases</h2>
+<p>Na aba <b>Releases → Draft a new release</b> você escolhe uma tag, escreve (ou gera automaticamente) as notas de versão e anexa binários. Muito usado para distribuir software.</p>
+`,quiz:[
+{q:'Por que "git push" não envia suas tags?',o:['É um bug','Tags precisam ser enviadas explicitamente (git push origin <tag> ou --tags)','Tags só existem no GitHub','Tags são privadas'],a:1,e:'Por padrão push envia apenas branches; tags exigem push explícito.'}]},
+
+{id:'cherry-pick',title:'cherry-pick: colhendo um commit específico',min:4,body:()=>`
+<p>Precisa de <b>só um commit</b> de outra branch (por exemplo, um bugfix) sem trazer o resto? <code>cherry-pick</code> copia aquele commit para a branch atual, criando um novo com o mesmo conteúdo.</p>
+${C(`
+$ git switch release/1.2
+$ git cherry-pick 4f1c2a9          # aplica esse commit aqui
+$ git cherry-pick A B C            # vários
+$ git cherry-pick -x 4f1c2a9       # registra de onde veio na mensagem
+$ git cherry-pick --abort          # em caso de conflito indesejado`)}
+${info('<p>Caso típico: um hotfix foi feito na <code>main</code> e precisa ser levado para uma branch de release antiga.</p>')}
+${warn('<p>Use com moderação: cherry-picks duplicam commits e podem causar conflitos estranhos depois, quando as branches forem mescladas.</p>')}
+`,quiz:[
+{q:'Para que serve git cherry-pick?',o:['Apagar um commit','Aplicar na branch atual um commit específico de outra branch','Criar uma tag','Enviar para o remoto'],a:1,e:'Copia as mudanças de um commit escolhido para onde você está.'}]},
+
+{id:'reflog',title:'reflog: a rede de segurança',min:6,body:()=>`
+<p class="lead">O Git raramente perde algo de fato. O <code>reflog</code> é o diário de <b>todas</b> as posições por onde o HEAD passou — inclusive commits "perdidos" após um <code>reset --hard</code>.</p>
+${C(`
+$ git reflog
+9ab81cd HEAD@{0}: reset: moving to HEAD~2
+4f1c2a9 HEAD@{1}: commit: feat: adiciona busca
+b7d3e10 HEAD@{2}: commit: feat: adiciona login`)}
+<h2>Recuperando de um "ops"</h2>
+${C(`
+$ git reset --hard HEAD~2            # opa, apaguei commits importantes!
+$ git reflog                         # acha o hash de antes
+$ git reset --hard 4f1c2a9           # volta exatamente para lá
+
+# ou crie uma branch para guardar aquele ponto:
+$ git branch recuperada 4f1c2a9`)}
+${info('<p>O reflog é <b>local</b> e entradas expiram (padrão ~90 dias). Mas para "fiz besteira há 5 minutos", é salvador.</p>')}
+`,quiz:[
+{q:'Você fez git reset --hard e perdeu commits. Qual comando ajuda a encontrá-los?',o:['git log --lost','git reflog','git stash list','git fsck --undo'],a:1,e:'O reflog registra os movimentos do HEAD, permitindo voltar a um hash anterior.'}]},
+
+{id:'bisect-blame',title:'bisect, blame e outras lupas',min:6,body:()=>`
+<h2>git blame: quem mexeu nesta linha?</h2>
+${C(`
+$ git blame app.js
+4f1c2a9 (Ana  2026-11-02) function soma(a, b) {
+b7d3e10 (Beto 2026-11-10)   return a + b;`)}
+<p>Não é para culpar ninguém: é para achar o commit e entender o <i>contexto</i> da decisão.</p>
+<h2>git bisect: busca binária por bugs</h2>
+<p>"Isso funcionava na semana passada!" O bisect testa commits do meio do intervalo e acha o culpado em poucos passos (log₂ N).</p>
+${C(`
+$ git bisect start
+$ git bisect bad                 # o commit atual está quebrado
+$ git bisect good v1.0.0         # esta versão antiga funcionava
+# o Git faz checkout de um commit do meio; você testa e responde:
+$ git bisect good                # ou: git bisect bad
+# ... repete até: "4f1c2a9 is the first bad commit"
+$ git bisect reset               # volta ao normal`)}
+<p>Dá até para automatizar: <code>git bisect run npm test</code>.</p>
+<h2>Outros</h2>
+${C(`
+$ git clean -fd          # remove arquivos untracked (use -n antes para simular)
+$ git shortlog -sn       # ranking de commits por autor
+$ git grep "TODO"        # busca texto nos arquivos rastreados
+$ git worktree add ../hotfix main   # segunda pasta de trabalho do mesmo repo`)}
+`,quiz:[
+{q:'Qual técnica o git bisect usa para encontrar o commit que introduziu um bug?',o:['Busca linear do primeiro ao último','Busca binária','Aleatória','Pergunta ao autor'],a:1,e:'A busca binária reduz o intervalo pela metade a cada teste.'}]},
+
+{id:'hooks',title:'Hooks e automação local',min:5,body:()=>`
+<p>Hooks são scripts que o Git executa em eventos (antes de commit, antes de push…). Ficam em <code>.git/hooks/</code>.</p>
+<table><tr><th>Hook</th><th>Quando roda</th><th>Uso comum</th></tr>
+<tr><td><code>pre-commit</code></td><td>Antes de criar o commit</td><td>Lint, formatação, testes rápidos</td></tr>
+<tr><td><code>commit-msg</code></td><td>Após escrever a mensagem</td><td>Validar Conventional Commits</td></tr>
+<tr><td><code>pre-push</code></td><td>Antes do push</td><td>Rodar a suíte de testes</td></tr></table>
+${C(`
+#!/bin/sh
+# .git/hooks/pre-commit  (precisa de permissão de execução)
+npm run lint || { echo "Lint falhou, commit abortado"; exit 1; }`,'.git/hooks/pre-commit')}
+<p>Como <code>.git/</code> não é versionado, times usam ferramentas que compartilham hooks via repositório: <b>Husky</b> (JavaScript), <b>pre-commit</b> (Python) ou <b>lefthook</b>.</p>
+${tip('<p>Em último caso, <code>git commit --no-verify</code> pula os hooks — mas evite: o CI vai pegar o problema mesmo assim.</p>')}
+`,quiz:[
+{q:'Qual hook é ideal para rodar lint antes de aceitar um commit?',o:['post-merge','pre-commit','post-checkout','pre-rebase'],a:1,e:'pre-commit roda antes de o commit ser criado; se falhar, o commit é abortado.'}]}
+]},
+
+/* ---------------- 9 ---------------- */
+{id:'m9',title:'GitHub avançado',desc:'Actions, Pages, proteção de branch e segurança.',lessons:[
+{id:'actions',title:'GitHub Actions: CI/CD',min:10,body:()=>`
+<p class="lead">Actions executa automações a cada evento do repositório: rodar testes em cada PR, publicar o site, gerar releases…</p>
+<h2>Conceitos</h2>
+<table><tr><th>Termo</th><th>O que é</th></tr>
+<tr><td><b>Workflow</b></td><td>Arquivo YAML em <code>.github/workflows/</code></td></tr>
+<tr><td><b>Event</b></td><td>O gatilho: <code>push</code>, <code>pull_request</code>, <code>schedule</code>…</td></tr>
+<tr><td><b>Job</b></td><td>Conjunto de passos que roda em uma máquina (runner)</td></tr>
+<tr><td><b>Step</b></td><td>Um comando ou uma <i>action</i> reutilizável</td></tr></table>
+<h2>Exemplo: testes automáticos em cada PR</h2>
+${C(`
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm test`,'.github/workflows/ci.yml')}
+<p>Ao abrir um PR, o GitHub mostra ✅ ou ❌ dos checks. Combine com <b>branch protection</b> para só permitir merge quando passar.</p>
+<h2>Segredos</h2>
+<p>Credenciais ficam em <i>Settings → Secrets and variables → Actions</i> e são usadas assim:</p>
+${C(`
+      - run: ./deploy.sh
+        env:
+          API_TOKEN: \${{ secrets.API_TOKEN }}`,'trecho de workflow')}
+${warn('<p>YAML é sensível à indentação (use espaços, nunca tabs). Fixe versões das actions (<code>@v4</code>) e desconfie de actions de autores desconhecidos.</p>')}
+`,quiz:[
+{q:'Onde ficam os arquivos de workflow do GitHub Actions?',o:['.git/actions/','.github/workflows/','workflows/','.actions/'],a:1,e:'Arquivos .yml em .github/workflows/ são detectados automaticamente.'},
+{q:'Onde guardar tokens usados em workflows?',o:['No próprio YAML','No README','Em Secrets do repositório','Em um commit privado'],a:2,e:'Use Settings → Secrets e referencie via secrets.NOME.'}]},
+
+{id:'pages',title:'GitHub Pages: publique seu site de graça',min:5,body:()=>`
+<p>Hospede sites estáticos (HTML/CSS/JS) direto de um repositório, de graça, em <code>https://usuario.github.io/repositorio</code>.</p>
+<h2>Passo a passo</h2>
+<ol><li>Crie um repositório com um <code>index.html</code> na raiz.</li>
+<li>Vá em <b>Settings → Pages</b>.</li>
+<li>Em <i>Build and deployment</i> escolha <b>Deploy from a branch</b>, selecione <code>main</code> e a pasta <code>/ (root)</code>.</li>
+<li>Aguarde um ou dois minutos: o endereço aparece no topo da página.</li></ol>
+${tip('<p>Um repositório chamado exatamente <code>seu-usuario.github.io</code> vira seu site principal em <code>https://seu-usuario.github.io</code>. Perfeito para portfólio.</p>')}
+<p>Para frameworks (Vite, Astro, Hugo…) use <i>Source → GitHub Actions</i>: o workflow faz o build e publica o resultado. Também dá para configurar domínio próprio em <b>Custom domain</b>.</p>
+<div class="call info"><b class="t">Curiosidade</b><p>Este curso é um único arquivo <code>index.html</code>. Se você enviá-lo para um repositório e ativar o Pages, ele vira um site público.</p></div>
+`,quiz:[
+{q:'Que nome de repositório gera seu site em https://usuario.github.io ?',o:['site','usuario.github.io','pages','www'],a:1,e:'O repositório "<usuario>.github.io" é o site de usuário.'}]},
+
+{id:'protecao',title:'Proteção de branch e CODEOWNERS',min:6,body:()=>`
+<p>Em times, ninguém deve poder empurrar direto na <code>main</code>. Configure em <b>Settings → Branches → Add rule</b> (ou <i>Rulesets</i>):</p>
+<ul><li>✅ <b>Require a pull request before merging</b> (com número mínimo de aprovações)</li>
+<li>✅ <b>Require status checks to pass</b> (seus testes do Actions)</li>
+<li>✅ <b>Require conversation resolution</b></li>
+<li>✅ <b>Require linear history</b> (se o time quiser squash/rebase)</li>
+<li>✅ <b>Block force pushes</b> e impedir exclusão da branch</li></ul>
+<h2>CODEOWNERS</h2>
+<p>Define quem <b>precisa</b> revisar cada parte do código. Arquivo <code>.github/CODEOWNERS</code>:</p>
+${C(`
+# padrão          # revisores
+*                 @org/time-geral
+/docs/            @ana
+*.sql             @org/dba
+/src/pagamentos/  @beto @org/seguranca`,'.github/CODEOWNERS')}
+<h2>Segurança</h2>
+<ul><li><b>Dependabot</b>: abre PRs automáticos atualizando dependências vulneráveis.</li>
+<li><b>Secret scanning</b>: avisa se você commitou um token conhecido.</li>
+<li><b>Code scanning (CodeQL)</b>: análise estática em busca de vulnerabilidades.</li>
+<li><b>Commits assinados</b> (GPG/SSH): selo "Verified" provando a autoria.</li></ul>
+`,quiz:[
+{q:'Para que serve o arquivo CODEOWNERS?',o:['Listar licenças','Definir quem deve revisar mudanças em cada parte do repositório','Bloquear usuários','Configurar o CI'],a:1,e:'O GitHub solicita automaticamente a revisão dos donos dos arquivos alterados.'}]}
+]},
+
+/* ---------------- 10 ---------------- */
+{id:'m10',title:'Profissionalizando',desc:'Boas práticas, erros comuns e próximos passos.',lessons:[
+{id:'boas-praticas',title:'Boas práticas e erros comuns',min:7,body:()=>`
+<h2>Checklist do dia a dia</h2>
+<ul><li>☑ <code>git pull</code> antes de começar o dia/branch.</li>
+<li>☑ Um commit = uma mudança lógica, com mensagem clara.</li>
+<li>☑ <code>git status</code> e <code>git diff --staged</code> antes de cada commit.</li>
+<li>☑ Branches curtas, nomeadas com prefixo, e apagadas após o merge.</li>
+<li>☑ Nunca commitar segredos, binários gigantes ou <code>node_modules</code>.</li>
+<li>☑ PRs pequenos e bem descritos.</li>
+<li>☑ Proteger a <code>main</code> e exigir CI verde.</li></ul>
+<h2>Erros clássicos (e como sair deles)</h2>
+<table><tr><th>Problema</th><th>Solução</th></tr>
+<tr><td>"Commitei na branch errada"</td><td><code>git switch certa</code> + <code>git cherry-pick &lt;hash&gt;</code>; depois na errada <code>git reset --hard HEAD~1</code> (se não publicou).</td></tr>
+<tr><td>"Estou em detached HEAD"</td><td>Você está num commit solto. Para guardar o trabalho: <code>git switch -c nova-branch</code>. Para sair: <code>git switch main</code>.</td></tr>
+<tr><td>"Commitei uma senha"</td><td><b>Revogue a senha.</b> Depois remova do histórico com <code>git filter-repo</code> ou BFG.</td></tr>
+<tr><td>"Meu push foi rejeitado"</td><td><code>git pull --rebase</code> e <code>git push</code>.</td></tr>
+<tr><td>"Preciso desfazer um merge"</td><td>Não publicado: <code>git reset --hard ORIG_HEAD</code>. Publicado: <code>git revert -m 1 &lt;hash-do-merge&gt;</code>.</td></tr>
+<tr><td>"Arquivo grande demais"</td><td>Use <b>Git LFS</b> para binários pesados.</td></tr></table>
+${tip('<p>Em dúvida, rode <code>git status</code>. Ele sempre sugere o próximo passo.</p>')}
+`,quiz:[
+{q:'Você commitou uma chave de API e já fez push. Qual a PRIMEIRA ação?',o:['Apagar o último commit e torcer','Revogar/rotacionar a chave','Renomear o repositório','Fazer um novo commit dizendo "oops"'],a:1,e:'Assuma que a chave vazou. Revogue-a primeiro; limpar o histórico vem depois.'},
+{q:'O que fazer se perceber que está em "detached HEAD" com trabalho que quer manter?',o:['Nada, é normal','git switch -c nome-da-branch','git reset --hard','git stash drop'],a:1,e:'Criar uma branch ali ancora os commits e evita perdê-los.'}]},
+
+{id:'proximos',title:'Próximos passos',min:3,body:()=>`
+<p class="lead">Você percorreu o caminho dos fundamentos às práticas profissionais. Agora é hora de transformar conhecimento em hábito.</p>
+<h2>Plano de 30 dias</h2>
+<div class="grid">
+<div class="card"><b>Semana 1</b><p>Versione <b>todo</b> projeto novo, mesmo os pequenos. Commits frequentes e mensagens boas.</p></div>
+<div class="card"><b>Semana 2</b><p>Publique 2 projetos no GitHub com README caprichado e LICENSE.</p></div>
+<div class="card"><b>Semana 3</b><p>Use branches + PRs até em projetos solo. Configure um workflow de CI simples.</p></div>
+<div class="card"><b>Semana 4</b><p>Faça sua primeira contribuição open source (uma correção de documentação já vale!).</p></div></div>
+<h2>Para continuar estudando</h2>
+<ul><li><a href="https://git-scm.com/book/pt-br/v2" target="_blank" rel="noopener">Pro Git (PT-BR)</a> — o livro oficial, gratuito.</li>
+<li><a href="https://learngitbranching.js.org/?locale=pt_BR" target="_blank" rel="noopener">Learn Git Branching</a> — jogo visual interativo.</li>
+<li><a href="https://docs.github.com/pt" target="_blank" rel="noopener">Documentação do GitHub</a>.</li>
+<li><a href="https://ohshitgit.com/pt_BR" target="_blank" rel="noopener">Oh Shit, Git!?!</a> — como sair de apuros.</li></ul>
+<div class="call tip"><b class="t">Finalize</b><p>Faça a <a href="#/prova">Prova final</a> e use a <a href="#/cheatsheet">Cola de comandos</a> como consulta rápida.</p></div>
+`}
+]}
+];
+
+/* ============ cheat sheet ============ */
+const CHEATS=[
+['Configurar',[['git config --global user.name "Nome"','Define seu nome'],['git config --global user.email "e@x.com"','Define seu e-mail'],['git config --list','Lista configurações']]],
+['Começar',[['git init','Cria repositório na pasta atual'],['git clone <url>','Baixa um repositório']]],
+['Ciclo básico',[['git status','Estado dos arquivos'],['git add <arquivo>','Adiciona à staging'],['git add .','Adiciona tudo'],['git commit -m "msg"','Cria commit'],['git commit -am "msg"','add (rastreados) + commit'],['git diff','Mudanças não staged'],['git diff --staged','Mudanças staged']]],
+['Histórico',[['git log --oneline --graph --all','Árvore compacta'],['git show <hash>','Detalhes de um commit'],['git blame <arquivo>','Autor de cada linha'],['git reflog','Histórico do HEAD']]],
+['Desfazer',[['git restore <arquivo>','Descarta mudanças locais'],['git restore --staged <arquivo>','Tira da staging'],['git commit --amend','Altera último commit'],['git reset --soft HEAD~1','Desfaz commit, mantém staged'],['git reset --hard HEAD~1','Desfaz commit e mudanças'],['git revert <hash>','Commit que desfaz outro']]],
+['Branches',[['git branch','Lista branches'],['git switch -c <nome>','Cria e troca'],['git switch <nome>','Troca de branch'],['git merge <nome>','Mescla na atual'],['git rebase <base>','Reaplica sobre outra base'],['git branch -d <nome>','Apaga branch']]],
+['Remotos',[['git remote add origin <url>','Adiciona remoto'],['git push -u origin <branch>','Envia e vincula'],['git fetch','Baixa sem integrar'],['git pull','fetch + merge'],['git pull --rebase','fetch + rebase'],['git push origin --delete <branch>','Apaga no remoto']]],
+['Avançado',[['git stash push -u -m "msg"','Guarda trabalho'],['git stash pop','Restaura stash'],['git tag -a v1.0.0 -m "msg"','Cria tag anotada'],['git cherry-pick <hash>','Copia um commit'],['git bisect start','Caça um bug'],['git clean -fdn','Simula limpeza de untracked'],['git push --force-with-lease','Force push mais seguro']]]
+];
+
+/* ============ estado/progresso ============ */
+const FLAT=[];MODULES.forEach((m,mi)=>m.lessons.forEach((l,li)=>{l.mod=m;l.mi=mi;l.li=li;l.route='/'+l.id;FLAT.push(l)}));
+let prog=store.get('gg-prog',{done:{},quiz:{},exam:null});
+const saveProg=()=>store.set('gg-prog',prog);
+const isDone=id=>!!prog.done[id];
+
+function renderNav(filter=''){
+  const f=filter.trim().toLowerCase();
+  const nav=$('#nav');nav.innerHTML='';
+  const cur=location.hash.replace('#','')||'/';
+  MODULES.forEach((m,mi)=>{
+    const ls=m.lessons.filter(l=>!f||(l.title+' '+m.title).toLowerCase().includes(f));
+    if(!ls.length)return;
+    const d=document.createElement('details');d.className='mod';
+    const curIn=ls.some(l=>l.route===cur);
+    d.open=f?true:(curIn||store.get('gg-open-'+m.id,mi===0));
+    const done=m.lessons.filter(l=>isDone(l.id)).length;
+    d.innerHTML='<summary><span class="n">'+(mi+1)+'</span>'+esc(m.title)+'<span class="c">'+done+'/'+m.lessons.length+'</span></summary>'+
+      ls.map(l=>'<a href="#'+l.route+'" class="'+(l.route===cur?'active ':'')+(isDone(l.id)?'done':'')+'"><span class="dot"></span><span>'+esc(l.title)+'</span></a>').join('');
+    d.addEventListener('toggle',()=>{if(!f)store.set('gg-open-'+m.id,d.open)});
+    nav.appendChild(d);
+  });
+  const sp=$('#special');
+  sp.innerHTML=[['/','🏠','Início'],['/lab','🧪','Laboratório (terminal)'],['/cheatsheet','📋','Cola de comandos'],['/prova','🎓','Prova final']]
+    .map(([r,i,t])=>'<a href="#'+r+'" class="'+(cur===r?'active':'')+'">'+i+' '+t+'</a>').join('');
+  const total=FLAT.length,n=FLAT.filter(l=>isDone(l.id)).length;
+  $('#pbar').style.width=(n/total*100)+'%';
+  $('#ptxt').textContent=n+' de '+total+' lições concluídas ('+Math.round(n/total*100)+'%)';
+}
+
+/* ============ roteador ============ */
+const view=$('#view');
+function route(){
+  const r=location.hash.replace('#','')||'/';
+  document.body.classList.remove('menu');
+  stopLab();
+  if(r==='/')renderHome();
+  else if(r==='/lab')renderLab();
+  else if(r==='/cheatsheet')renderCheat();
+  else if(r==='/prova')renderExam();
+  else{const l=FLAT.find(x=>x.route===r);if(l)renderLesson(l);else renderHome()}
+  renderNav($('#search').value);
+  window.scrollTo(0,0);
+  const act=$('#nav a.active');if(act)act.scrollIntoView({block:'nearest'});
+}
+window.addEventListener('hashchange',route);
+
+function setCrumb(t){$('#crumb').textContent=t;document.title=t+' · Git & GitHub na Prática'}
+
+/* ============ home ============ */
+function renderHome(){
+  setCrumb('Início');
+  const total=FLAT.length,n=FLAT.filter(l=>isDone(l.id)).length;
+  const next=FLAT.find(l=>!isDone(l.id))||FLAT[0];
+  const mins=FLAT.reduce((a,l)=>a+l.min,0);
+  view.innerHTML=`
+  <div class="hero">
+    <div class="kicker">Curso interativo · Português</div>
+    <h1>Domine <em>Git</em> e <em>GitHub</em> do zero ao profissional</h1>
+    <p class="lead">${MODULES.length} módulos, ${total} lições, quizzes, um terminal Git simulado e uma prova final. Tudo roda no seu navegador, sem instalar nada — e seu progresso fica salvo.</p>
+    <p><a class="btn primary" href="#${next.route}" style="text-decoration:none;display:inline-block">${n?'Continuar: '+esc(next.title):'Começar o curso →'}</a>
+    <a class="btn" href="#/lab" style="text-decoration:none;display:inline-block">🧪 Ir direto ao laboratório</a></p>
+    <div class="meta"><span>⏱ ~${Math.round(mins/60*10)/10} h de conteúdo</span><span>✅ ${n}/${total} concluídas</span>${prog.exam!==null?'<span>🎓 Melhor nota na prova: '+prog.exam+'%</span>':''}</div>
+  </div>
+  <h2 style="margin-top:.6em">Módulos</h2>
+  <div class="modcards">${MODULES.map((m,i)=>{const d=m.lessons.filter(l=>isDone(l.id)).length;return `<a class="modcard" href="#${m.lessons[0].route}"><div class="n">MÓDULO ${i+1}</div><h3>${esc(m.title)}</h3><p>${esc(m.desc)}</p><div class="mp"><i style="width:${d/m.lessons.length*100}%"></i></div></a>`}).join('')}</div>
+  <div class="card"><h3 style="margin-top:0">Como aproveitar</h3><ul>
+  <li>Leia cada lição e <b>responda os quizzes</b> no final.</li>
+  <li>Use o <a href="#/lab">Laboratório</a> para repetir os comandos em um repositório simulado, com gráfico de commits ao vivo.</li>
+  <li>Clique em <b>copiar</b> nos blocos de código para testar no seu terminal de verdade.</li>
+  <li>Atalhos: <code>/</code> busca · <code>←</code> <code>→</code> navegam entre lições.</li></ul>
+  <button class="btn" id="reset">Zerar progresso</button></div>`;
+  $('#reset').onclick=()=>{if(confirm('Apagar todo o progresso?')){prog={done:{},quiz:{},exam:null};saveProg();route()}};
+}
+
+/* ============ lição ============ */
+function renderLesson(l){
+  setCrumb(l.mod.title+' › '+l.title);
+  const idx=FLAT.indexOf(l),prev=FLAT[idx-1],next=FLAT[idx+1];
+  view.innerHTML=`
+  <div class="kicker">Módulo ${l.mi+1} · Lição ${l.li+1}</div>
+  <h1>${esc(l.title)}</h1>
+  <div class="meta"><span>⏱ ${l.min} min</span><span>${esc(l.mod.title)}</span></div>
+  <div id="body">${l.body()}</div>
+  ${l.quiz?`<section class="quiz"><h2>🧠 Teste seus conhecimentos</h2><div id="quiz"></div></section>`:''}
+  <div class="finish"><button class="btn primary" id="doneBtn"></button></div>
+  <div class="pager">${prev?`<a href="#${prev.route}"><small>← Anterior</small>${esc(prev.title)}</a>`:'<span></span>'}${next?`<a class="next" href="#${next.route}"><small>Próxima →</small>${esc(next.title)}</a>`:`<a class="next" href="#/prova"><small>Fim do conteúdo →</small>Fazer a prova final</a>`}</div>`;
+  initWidgets(view);
+  if(l.quiz)renderQuiz($('#quiz'),l.quiz,l.id);
+  const btn=$('#doneBtn');
+  const upd=()=>{btn.textContent=isDone(l.id)?'✓ Lição concluída (clique para desmarcar)':'Marcar como concluída';btn.classList.toggle('primary',!isDone(l.id))};
+  upd();
+  btn.onclick=()=>{if(isDone(l.id))delete prog.done[l.id];else{prog.done[l.id]=1;toast('Lição concluída! 🎉')}saveProg();upd();renderNav($('#search').value)};
+}
+
+function renderQuiz(box,qs,key){
+  let right=0,ans=0;
+  qs.forEach((q,qi)=>{
+    const el=document.createElement('div');el.className='q';
+    el.innerHTML='<h4>'+(qi+1)+'. '+esc(q.q)+'</h4>'+q.o.map((o,i)=>'<button class="opt" data-i="'+i+'">'+esc(o)+'</button>').join('')+'<div class="exp"></div>';
+    $$('.opt',el).forEach(b=>b.onclick=()=>{
+      if(el.classList.contains('answered'))return;
+      el.classList.add('answered');
+      const i=+b.dataset.i;
+      $$('.opt',el).forEach(x=>x.disabled=true);
+      $$('.opt',el)[q.a].classList.add('ok');
+      if(i!==q.a)b.classList.add('bad');
+      $('.exp',el).innerHTML=(i===q.a?'<b style="color:var(--green)">Correto!</b> ':'<b style="color:var(--red)">Não foi dessa vez.</b> ')+esc(q.e);
+      ans++;if(i===q.a)right++;
+      if(ans===qs.length&&key){
+        prog.quiz[key]=right;
+        if(right===qs.length&&!isDone(key)){prog.done[key]=1;toast('Gabaritou! Lição concluída 🎉');}
+        saveProg();renderNav($('#search').value);
+        const b=$('#doneBtn');if(b){b.textContent=isDone(key)?'✓ Lição concluída (clique para desmarcar)':'Marcar como concluída';b.classList.toggle('primary',!isDone(key))}
+      }
+    });
+    box.appendChild(el);
+  });
+}
+
+/* ============ widgets ============ */
+function initWidgets(root){
+  $$('[data-widget=areas]',root).forEach(el=>{
+    let st='none';
+    const log=['Arquivo <b>app.js</b> ainda não existe. Clique em "Criar/editar app.js".'];
+    function draw(){
+      const f=(c,t)=>'<span class="file '+c+'">📄 app.js '+t+'</span>';
+      const wd=st==='none'?'':st==='mod'?f('mod','(modificado)'):st==='stg'?f('stg','(igual à staging)'):f('com','(limpo)');
+      const sg=st==='stg'?f('stg','(pronto p/ commit)'):'';
+      const rp=(st==='com'||commits>0)?Array.from({length:commits},(_,i)=>'<span class="file com">● commit '+(i+1)+'</span>').join(''):'';
+      el.innerHTML='<div class="areas"><div class="area"><h5>Working Directory</h5>'+wd+'</div><div class="area"><h5>Staging Area</h5>'+sg+'</div><div class="area"><h5>Repository (.git)</h5>'+rp+'</div></div>'+
+      '<div class="wbtns"><button class="btn" data-a="edit">✏️ Criar/editar app.js</button><button class="btn" data-a="add" '+(st==='mod'?'':'disabled')+'>git add app.js</button><button class="btn" data-a="commit" '+(st==='stg'?'':'disabled')+'>git commit</button><button class="btn" data-a="reset">↺ Reiniciar</button></div><div class="wlog">'+log[0]+'</div>';
+      $$('button',el).forEach(b=>b.onclick=()=>act(b.dataset.a));
+    }
+    let commits=0;
+    function act(a){
+      if(a==='edit'){st='mod';log[0]='Arquivo modificado no <b>working directory</b>. O Git viu a mudança, mas ainda não vai no commit.'}
+      if(a==='add'){st='stg';log[0]='<code>git add</code> copiou a versão atual para a <b>staging area</b>.'}
+      if(a==='commit'){st='com';commits++;log[0]='<code>git commit</code> gravou o snapshot no <b>repositório</b>. Edite de novo para repetir o ciclo.'}
+      if(a==='reset'){st='none';commits=0;log[0]='Recomeçando…'}
+      draw();
+    }
+    draw();
+  });
+}
+
+/* ============ cheat sheet ============ */
+function renderCheat(){
+  setCrumb('Cola de comandos');
+  view.innerHTML='<div class="kicker">Referência</div><h1>Cola de comandos</h1><p class="lead">Clique em qualquer comando para copiar. Substitua o que estiver entre <code>&lt; &gt;</code>.</p><input class="search" id="cs" placeholder="Filtrar comandos…"><div id="csb"></div>';
+  const draw=f=>{
+    $('#csb').innerHTML=CHEATS.map(([cat,rows])=>{
+      const r=rows.filter(([c,d])=>!f||(c+' '+d).toLowerCase().includes(f));
+      return r.length?'<div class="cs-cat">'+cat+'</div><div class="card" style="padding:0;margin-top:0">'+r.map(([c,d])=>'<div class="cs-row"><div><code data-copy="'+esc(c).replace(/"/g,'&quot;')+'">'+esc(c)+'</code></div><div>'+esc(d)+'</div></div>').join('')+'</div>':'';
+    }).join('')||'<p>Nada encontrado.</p>';
+  };
+  draw('');$('#cs').oninput=e=>draw(e.target.value.toLowerCase());
+}
+
+/* ============ prova final ============ */
+function renderExam(){
+  setCrumb('Prova final');
+  const pool=[];FLAT.forEach(l=>(l.quiz||[]).forEach(q=>pool.push(q)));
+  const N=Math.min(12,pool.length);
+  view.innerHTML=`<div class="kicker">Avaliação</div><h1>Prova final</h1><p class="lead">${N} questões sorteadas de todo o curso. Responda todas para ver sua nota. Você pode refazer quantas vezes quiser.</p><div id="ex"></div><div id="res"></div>`;
+  const qs=[...pool].sort(()=>Math.random()-.5).slice(0,N);
+  let ans=0,right=0;
+  const box=$('#ex');
+  qs.forEach((q,qi)=>{
+    const el=document.createElement('div');el.className='q';
+    el.innerHTML='<h4>'+(qi+1)+'. '+esc(q.q)+'</h4>'+q.o.map((o,i)=>'<button class="opt" data-i="'+i+'">'+esc(o)+'</button>').join('')+'<div class="exp"></div>';
+    $$('.opt',el).forEach(b=>b.onclick=()=>{
+      if(el.classList.contains('answered'))return;el.classList.add('answered');
+      $$('.opt',el).forEach(x=>x.disabled=true);$$('.opt',el)[q.a].classList.add('ok');
+      const i=+b.dataset.i;if(i!==q.a)b.classList.add('bad');else right++;
+      $('.exp',el).textContent=q.e;ans++;
+      if(ans===N){
+        const pct=Math.round(right/N*100);
+        if(prog.exam===null||pct>prog.exam){prog.exam=pct;saveProg()}
+        $('#res').innerHTML='<div class="card" style="text-align:center"><div class="score">'+pct+'%</div><p>'+right+' de '+N+' corretas — '+(pct>=90?'🏆 Excelente! Você domina Git e GitHub.':pct>=70?'👏 Muito bom! Revise os pontos que errou.':'📚 Continue praticando! Reveja as lições e o laboratório.')+'</p><button class="btn primary" onclick="renderExam()">Refazer prova</button></div>';
+        $('#res').scrollIntoView({behavior:'smooth'});
+      }
+    });
+    box.appendChild(el);
+  });
+}
+
+/* ============ LABORATÓRIO: Git simulado ============ */
+let G;
+const GOALS=[
+ ['Inicializar um repositório (git init)',s=>s.init],
+ ['Criar o primeiro commit',s=>s.order.length>=1],
+ ['Criar uma branch e fazer um commit nela',s=>Object.keys(s.branches).length>=2&&s.order.some(id=>s.commits[id].branch&&s.commits[id].branch!=='main')],
+ ['Fazer merge de uma branch na main',s=>s.order.some(id=>s.commits[id].parents.length===2||s.ffMerged)],
+ ['Provocar e resolver um conflito de merge',s=>s.conflictResolved],
+ ['Ter pelo menos 6 commits',s=>s.order.length>=6]
+];
+function newRepo(){return{init:false,work:{},index:{},commits:{},order:[],branches:{},head:'main',merging:null,n:0,ffMerged:false,conflictResolved:false,hist:[],hi:0,doneGoals:{}}}
+function hash(s){let x=2166136261;for(let i=0;i<s.length;i++){x^=s.charCodeAt(i);x=Math.imul(x,16777619)}return(x>>>0).toString(16).padStart(8,'0').slice(0,7)}
+const headId=()=>G.branches[G.head];
+const snap=id=>id?G.commits[id].files:{};
+function anc(id,set=new Set()){if(!id||set.has(id))return set;set.add(id);G.commits[id].parents.forEach(p=>anc(p,set));return set}
+function lca(a,b){const A=anc(a),B=anc(b);const c=G.order.filter(x=>A.has(x)&&B.has(x));return c.length?c[c.length-1]:null}
+
+let tout,tin;
+function out(h,c){const d=document.createElement('div');if(c)d.className=c;d.innerHTML=h;tout.appendChild(d);tout.scrollTop=tout.scrollHeight}
+const E=esc;
+
+function tokenize(s){
+  const t=[];let cur='',q=null,has=false;
+  for(let i=0;i<s.length;i++){
+    const ch=s[i];
+    if(q){if(ch===q)q=null;else cur+=ch}
+    else if(ch==='"'||ch==="'"){q=ch;has=true}
+    else if(/\s/.test(ch)){if(cur||has){t.push(cur);cur='';has=false}}
+    else if(ch==='>'){if(cur||has){t.push(cur);cur='';has=false}if(s[i+1]==='>'){t.push('>>');i++}else t.push('>')}
+    else cur+=ch;
+  }
+  if(cur||has)t.push(cur);return t;
+}
+
+function status(){
+  if(!G.init)return out('fatal: not a git repository (or any of the parent directories): .git','r');
+  const hs=snap(headId());const lines=[];
+  lines.push('On branch '+G.head);
+  if(!G.order.length&&!Object.keys(G.index).length)lines.push('\nNo commits yet');
+  const staged=[],unst=[],untr=[],unm=[];
+  const names=new Set([...Object.keys(hs),...Object.keys(G.index),...Object.keys(G.work)]);
+  [...names].sort().forEach(f=>{
+    const inH=f in hs,inI=f in G.index,inW=f in G.work;
+    if(G.merging&&G.merging.conflicts.has(f)){unm.push('both modified:   '+f);return}
+    if(inI&&!inH)staged.push('new file:   '+f);
+    else if(inI&&inH&&G.index[f]!==hs[f])staged.push('modified:   '+f);
+    else if(!inI&&inH)staged.push('deleted:    '+f);
+    if(inI&&inW&&G.work[f]!==G.index[f])unst.push('modified:   '+f);
+    else if(inI&&!inW)unst.push('deleted:    '+f);
+    if(!inI&&inW&&!(f in hs))untr.push(f);
+  });
+  let h='';
+  if(G.merging)h+='<span class="y">You have unmerged paths.</span>\n  (fix conflicts and run "git commit")\n\n';
+  if(unm.length)h+='Unmerged paths:\n'+unm.map(x=>'\t<span class="r">'+E(x)+'</span>').join('\n')+'\n\n';
+  if(staged.length)h+='Changes to be committed:\n  <span class="d">(use "git restore --staged &lt;file&gt;..." to unstage)</span>\n'+staged.map(x=>'\t<span class="g">'+E(x)+'</span>').join('\n')+'\n\n';
+  if(unst.length)h+='Changes not staged for commit:\n  <span class="d">(use "git add &lt;file&gt;..." to update what will be committed)</span>\n'+unst.map(x=>'\t<span class="r">'+E(x)+'</span>').join('\n')+'\n\n';
+  if(untr.length)h+='Untracked files:\n  <span class="d">(use "git add &lt;file&gt;..." to include in what will be committed)</span>\n'+untr.map(x=>'\t<span class="r">'+E(x)+'</span>').join('\n')+'\n\n';
+  if(!staged.length&&!unst.length&&!untr.length&&!unm.length)h+=G.order.length?'nothing to commit, working tree clean':'nothing to commit (create/copy files and use "git add" to track)';
+  out(E(lines.join('\n'))+'\n'+h.trimEnd());
+}
+
+function dirty(){
+  const hs=snap(headId());
+  if(JSON.stringify(sortObj(G.index))!==JSON.stringify(sortObj(hs)))return true;
+  return Object.keys(G.index).some(f=>G.work[f]!==G.index[f]);
+}
+const sortObj=o=>Object.keys(o).sort().map(k=>[k,o[k]]);
+
+function doCommit(msg){
+  const parents=[];if(headId())parents.push(headId());
+  if(G.merging)parents.push(G.merging.tid);
+  const id=hash(msg+(++G.n)+Math.random());
+  G.commits[id]={id,msg,parents,files:{...G.index},branch:G.head};
+  G.order.push(id);G.branches[G.head]=id;
+  return id;
+}
+
+function gitCmd(a){
+  const sub=a[0];
+  if(!sub){out('usage: git &lt;command&gt;  — digite <span class="l">help</span> para ver os comandos suportados.');return}
+  if(sub==='init'){
+    if(G.init){out('Reinitialized existing Git repository','d');return}
+    G.init=true;out('<span class="g">Initialized empty Git repository in /projeto/.git/</span>');return;
+  }
+  if(sub==='--version'){out('git version 2.47.0 (simulado)');return}
+  if(!G.init){out('fatal: not a git repository (or any of the parent directories): .git','r');return}
+  const args=a.slice(1);
+  switch(sub){
+  case 'status':return status();
+  case 'add':{
+    if(!args.length){out('Nothing specified, nothing added.','y');return}
+    for(const p of args){
+      if(p==='.'||p==='-A'||p==='--all'){
+        Object.keys(G.work).forEach(f=>{G.index[f]=G.work[f]});
+        Object.keys(G.index).forEach(f=>{if(!(f in G.work))delete G.index[f]});
+        if(G.merging)G.merging.conflicts.clear();
+      }else if(p in G.work){
+        G.index[p]=G.work[p];
+        if(G.merging&&G.merging.conflicts.has(p)){
+          G.merging.conflicts.delete(p);
+          if(/^<<<<<<< /m.test(G.work[p]))out('warning: o arquivo '+E(p)+' ainda contém marcadores de conflito!','y');
+        }
+      }else if(p in G.index){delete G.index[p]}
+      else{out('fatal: pathspec \''+E(p)+'\' did not match any files','r');return}
+    }
+    return;
+  }
+  case 'commit':{
+    let msg=null,all=false;
+    for(let i=0;i<args.length;i++){
+      if(args[i]==='-m')msg=args[++i];
+      else if(args[i]==='-a')all=true;
+      else if(args[i]==='-am'||args[i]==='-ma'){all=true;msg=args[++i]}
+      else if(args[i]==='--amend'){out('(--amend não é suportado no simulador)','y');return}
+    }
+    if(G.merging&&G.merging.conflicts.size){out('error: Committing is not possible because you have unmerged files.\nhint: Fix them up in the work tree, and then use \'git add &lt;file&gt;\'.','r');return}
+    if(all)Object.keys(G.index).forEach(f=>{if(f in G.work)G.index[f]=G.work[f];else delete G.index[f]});
+    const same=JSON.stringify(sortObj(G.index))===JSON.stringify(sortObj(snap(headId())));
+    if(same&&!G.merging){
+      out('On branch '+G.head+'\n'+(Object.keys(G.work).some(f=>!(f in G.index))||Object.keys(G.index).some(f=>G.work[f]!==G.index[f])?'no changes added to commit (use "git add" and/or "git commit -a")':'nothing to commit, working tree clean'));return;
+    }
+    if(!msg){if(G.merging)msg="Merge branch '"+G.merging.target+"'";else{out('Aborting commit due to empty commit message. Use <span class="l">git commit -m "mensagem"</span>','r');return}}
+    const wasMerge=!!G.merging;
+    const id=doCommit(msg);
+    if(wasMerge){if(G.merging.hadConflict)G.conflictResolved=true;G.merging=null}
+    const nf=Object.keys(G.index).length;
+    out('<span class="b">['+E(G.head)+(G.order.length===1?' (root-commit)':'')+' '+id+']</span> '+E(msg)+'\n '+nf+' file'+(nf===1?'':'s')+' tracked');return;
+  }
+  case 'restore':{
+    const staged=args.includes('--staged');const files=args.filter(x=>!x.startsWith('-'));
+    if(!files.length){out('fatal: you must specify path(s) to restore','r');return}
+    for(const f of files){
+      if(staged){const h=snap(headId());if(f in h)G.index[f]=h[f];else delete G.index[f]}
+      else{if(f in G.index)G.work[f]=G.index[f];else{out('error: pathspec \''+E(f)+'\' did not match any file(s) known to git','r');return}}
+    }return;
+  }
+  case 'diff':{
+    const staged=args.includes('--staged')||args.includes('--cached');
+    let any=false;
+    const base=staged?snap(headId()):G.index,tgt=staged?G.index:G.work;
+    Object.keys(tgt).sort().forEach(f=>{
+      if(!staged&&!(f in G.index))return;
+      if(base[f]!==tgt[f]){any=true;
+        let h='<span class="y">diff --git a/'+E(f)+' b/'+E(f)+'</span>\n--- a/'+E(f)+'\n+++ b/'+E(f)+'\n';
+        (base[f]??'').split('\n').filter((x,i,arr)=>f in base&&!(arr.length===1&&x==='')).forEach(l=>h+='<span class="r">-'+E(l)+'</span>\n');
+        (tgt[f]??'').split('\n').filter((x,i,arr)=>!(arr.length===1&&x==='')).forEach(l=>h+='<span class="g">+'+E(l)+'</span>\n');
+        out(h.trimEnd());
+      }
+    });
+    if(!any)out('(sem diferenças)','d');return;
+  }
+  case 'log':{
+    if(!G.order.length){out('fatal: your current branch \''+G.head+'\' does not have any commits yet','r');return}
+    const one=args.includes('--oneline'),all=args.includes('--all'),graph=args.includes('--graph');
+    let set;
+    if(all){set=new Set(G.order)}else set=anc(headId());
+    const list=G.order.filter(x=>set.has(x)).reverse();
+    const deco=id=>{const d=[];Object.keys(G.branches).forEach(b=>{if(G.branches[b]===id)d.push(b===G.head?'HEAD -> '+b:b)});return d.length?' <span class="y">('+E(d.join(', '))+')</span>':''};
+    list.forEach(id=>{const c=G.commits[id];
+      if(one)out((graph?'<span class="r">*</span> ':'')+'<span class="y">'+id+'</span>'+deco(id)+' '+E(c.msg));
+      else out('<span class="y">commit '+id+'</span>'+deco(id)+'\nAuthor: Você &lt;voce@exemplo.com&gt;\n'+(c.parents.length>1?'Merge: '+c.parents.map(p=>p).join(' ')+'\n':'')+'\n    '+E(c.msg)+'\n');
+    });return;
+  }
+  case 'branch':{
+    const del=args.find(x=>x==='-d'||x==='-D'),names=args.filter(x=>!x.startsWith('-'));
+    if(del){const n=names[0];if(!(n in G.branches)){out('error: branch \''+E(n)+'\' not found.','r');return}
+      if(n===G.head){out('error: cannot delete branch \''+E(n)+'\' used by worktree','r');return}
+      if(del==='-d'&&!anc(headId()).has(G.branches[n])){out('error: the branch \''+E(n)+'\' is not fully merged. Use -D para forçar.','r');return}
+      delete G.branches[n];out('Deleted branch '+E(n));return}
+    if(names.length){
+      if(!headId()){out('fatal: not a valid object name: \''+G.head+'\'','r');return}
+      if(names[0] in G.branches){out('fatal: a branch named \''+E(names[0])+'\' already exists','r');return}
+      G.branches[names[0]]=headId();return}
+    const bs=Object.keys(G.branches);if(!bs.includes(G.head))bs.push(G.head);
+    bs.sort().forEach(b=>out(b===G.head?'<span class="g">* '+E(b)+'</span>':'  '+E(b)));return;
+  }
+  case 'switch':case 'checkout':{
+    const create=args.includes('-c')||args.includes('-b');const n=args.filter(x=>!x.startsWith('-'))[0];
+    if(!n){out('fatal: missing branch name','r');return}
+    if(create){
+      if(n in G.branches){out('fatal: a branch named \''+E(n)+'\' already exists','r');return}
+      if(headId())G.branches[n]=headId();G.head=n;out('Switched to a new branch \''+E(n)+'\'');return}
+    if(!(n in G.branches)){out('fatal: invalid reference: '+E(n),'r');return}
+    if(G.merging){out('error: you need to resolve your current index first','r');return}
+    if(dirty()){out('error: Your local changes would be overwritten by checkout.\nCommit ou use stash antes de trocar de branch.','r');return}
+    G.head=n;const s=snap(G.branches[n]);
+    // preserva arquivos untracked
+    Object.keys(G.work).forEach(f=>{if(f in G.index||f in snap(G.branches[n]))delete G.work[f]});
+    Object.keys(G.index).forEach(f=>delete G.index[f]);
+    Object.assign(G.work,s);Object.assign(G.index,s);
+    out('Switched to branch \''+E(n)+'\'');return;
+  }
+  case 'merge':{
+    const n=args.filter(x=>!x.startsWith('-'))[0];
+    if(args.includes('--abort')){
+      if(!G.merging){out('fatal: There is no merge to abort (MERGE_HEAD missing).','r');return}
+      const s=snap(headId());G.work={...s};G.index={...s};G.merging=null;out('Merge abortado.');return}
+    if(!n){out('fatal: especifique a branch para o merge','r');return}
+    if(!(n in G.branches)){out('merge: '+E(n)+' - not something we can merge','r');return}
+    if(G.merging){out('fatal: você ainda está em um merge. Resolva ou use --abort.','r');return}
+    if(dirty()){out('error: suas alterações locais seriam sobrescritas. Faça commit primeiro.','r');return}
+    const hid=headId(),tid=G.branches[n];
+    if(anc(hid).has(tid)){out('Already up to date.');return}
+    const noff=args.includes('--no-ff');
+    if(anc(tid).has(hid)&&!noff){
+      G.branches[G.head]=tid;const s=snap(tid);G.work={...s};G.index={...s};G.ffMerged=true;
+      out('Updating '+hid+'..'+tid+'\n<span class="g">Fast-forward</span>');return}
+    const base=lca(hid,tid),B=snap(base),O=snap(hid),T=snap(tid);
+    const res={},conf=new Set();
+    new Set([...Object.keys(B),...Object.keys(O),...Object.keys(T)]).forEach(f=>{
+      const b=B[f],o=O[f],t=T[f];
+      let r;
+      if(o===t)r=o;else if(o===b)r=t;else if(t===b)r=o;else{conf.add(f);r=undefined}
+      if(r!==undefined)res[f]=r;
+    });
+    G.index={...res};
+    conf.forEach(f=>{G.index[f]=O[f]??'';});
+    G.work={...res};
+    conf.forEach(f=>{G.work[f]='<<<<<<< HEAD\n'+(O[f]??'')+'\n=======\n'+(T[f]??'')+'\n>>>>>>> '+n});
+    if(conf.size){
+      G.merging={target:n,tid,conflicts:conf,hadConflict:true};
+      let h='';conf.forEach(f=>h+='Auto-merging '+E(f)+'\n<span class="r">CONFLICT (content): Merge conflict in '+E(f)+'</span>\n');
+      out(h+'Automatic merge failed; fix conflicts and then commit the result.\n<span class="d">Dica: edite o arquivo (ex.: echo "versão final" &gt; '+E([...conf][0])+'), depois git add e git commit.</span>');return}
+    G.merging={target:n,tid,conflicts:new Set()};
+    const id=doCommit("Merge branch '"+n+"'");G.merging=null;
+    out('Merge made by the \'ort\' strategy. <span class="y">'+id+'</span>');return;
+  }
+  case 'help':return help();
+  default:out('git: \''+E(sub)+'\' não é suportado no simulador. Digite <span class="l">help</span>.','y');
+  }
+}
+
+function help(){
+  out(`<span class="l">Comandos shell</span>: ls · cat &lt;f&gt; · touch &lt;f&gt; · rm &lt;f&gt; · echo "texto" &gt; &lt;f&gt; · echo "texto" &gt;&gt; &lt;f&gt; · clear · reset-lab
+<span class="l">Comandos git</span>: init · status · add &lt;f|.&gt; · commit -m "msg" (-am) · restore [--staged] &lt;f&gt; · diff [--staged]
+             log [--oneline --graph --all] · branch [-d] [nome] · switch [-c] &lt;b&gt; · checkout [-b] &lt;b&gt;
+             merge [--no-ff|--abort] &lt;b&gt;
+<span class="d">Use ↑ ↓ para navegar no histórico de comandos.</span>`);
+}
+
+function run(line){
+  line=line.trim();if(!line)return;
+  out('<span class="g">$</span> '+E(line),'');
+  G.hist.push(line);G.hi=G.hist.length;
+  const t=tokenize(line);const c=t[0];
+  try{
+    if(c==='git')gitCmd(t.slice(1));
+    else if(c==='help')help();
+    else if(c==='clear'){tout.innerHTML=''}
+    else if(c==='reset-lab'){const h=G.hist;G=newRepo();G.hist=h;G.hi=h.length;tout.innerHTML='';out('Laboratório reiniciado.','d')}
+    else if(c==='ls'){const f=Object.keys(G.work).sort();out(f.length?E(f.join('   ')):'','d')}
+    else if(c==='touch'){t.slice(1).forEach(f=>{if(!(f in G.work))G.work[f]=''})}
+    else if(c==='cat'){const f=t[1];if(f in G.work)out(E(G.work[f])||'<span class="d">(vazio)</span>');else out('cat: '+E(f)+': No such file or directory','r')}
+    else if(c==='rm'){t.slice(1).forEach(f=>{if(f in G.work)delete G.work[f];else out('rm: '+E(f)+': No such file or directory','r')})}
+    else if(c==='echo'){
+      const gi=t.findIndex(x=>x==='>'||x==='>>');
+      if(gi>-1){const f=t[gi+1];if(!f){out('syntax error','r')}else{const txt=t.slice(1,gi).join(' ');
+        G.work[f]=t[gi]==='>>'&&f in G.work&&G.work[f]!==''?G.work[f]+'\n'+txt:txt}}
+      else out(E(t.slice(1).join(' ')));
+    }
+    else out(E(c)+': comando não encontrado. Digite <span class="l">help</span>.','r');
+  }catch(e){out('erro interno: '+E(e.message),'r')}
+  refreshLab();
+}
+
+/* painel lateral do lab */
+function refreshLab(){
+  // metas
+  GOALS.forEach((g,i)=>{if(!G.doneGoals[i]&&g[1](G)){G.doneGoals[i]=1;toast('🎯 Meta cumprida: '+g[0])}});
+  $('#goals').innerHTML=GOALS.map((g,i)=>'<div class="goal '+(G.doneGoals[i]?'ok':'')+'"><i>'+(G.doneGoals[i]?'✓':'')+'</i><span>'+E(g[0])+'</span></div>').join('');
+  // arquivos
+  const hs=snap(headId());const names=[...new Set([...Object.keys(G.work),...Object.keys(G.index)])].sort();
+  $('#files').innerHTML=names.length?names.map(f=>{
+    let c='fs-u',t='untracked';
+    if(G.merging&&G.merging.conflicts.has(f)){c='fs-u';t='conflito'}
+    else if(f in G.index){
+      if(G.index[f]!==hs[f]&&!(f in G.work&&G.work[f]!==G.index[f])){c='fs-s';t='staged'}
+      else if(f in G.work&&G.work[f]!==G.index[f]){c='fs-m';t='modificado'}
+      else if(!(f in G.work)){c='fs-m';t='removido'}
+      else {c='fs-c';t='commitado'}
+    }
+    return '<span class="'+c+'">'+E(f)+' · '+t+'</span>'}).join(''):'<span style="border:0;color:var(--muted)">nenhum arquivo — tente: touch a.txt</span>';
+  drawGraph();
+}
+
+function drawGraph(){
+  const el=$('#graph');
+  if(!G.order.length){el.innerHTML='<p style="color:var(--muted);margin:0;font-size:.9rem">O gráfico aparece após o primeiro commit.</p>';return}
+  const lane={},used={};
+  const colors=['#e8590c','#1c7ed6','#2f9e44','#ae3ec9','#f59f00','#e03131'];
+  G.order.forEach(id=>{
+    const c=G.commits[id];
+    if(!c.parents.length){lane[id]=0;used[id]=lane[id];return}
+    const fp=c.parents[0];let l=lane[fp];
+    // se o pai já tem outro filho nessa lane, abre nova lane
+    const sibs=G.order.filter(o=>o!==id&&G.commits[o].parents[0]===fp&&lane[o]!==undefined&&G.order.indexOf(o)<G.order.indexOf(id));
+    if(sibs.some(o=>lane[o]===l)){let k=1;const taken=new Set(Object.values(lane));while(taken.has(k)&&false)k++;
+      const maxl=Math.max(...Object.values(lane));l=maxl+1}
+    lane[id]=l;
+  });
+  const dx=64,dy=44,pad=30;
+  const W=pad*2+dx*(G.order.length-1)+60,L=Math.max(...Object.values(lane))+1,H=pad*2+dy*(L-1)+34;
+  const pos=id=>({x:pad+dx*G.order.indexOf(id),y:pad+dy*lane[id]});
+  let s='<svg width="'+Math.max(W,300)+'" height="'+H+'" font-family="ui-monospace,Consolas,monospace" font-size="11">';
+  G.order.forEach(id=>G.commits[id].parents.forEach((p,pi)=>{
+    const a=pos(p),b=pos(id);const col=colors[lane[id]%colors.length];
+    s+= a.y===b.y?'<line x1="'+a.x+'" y1="'+a.y+'" x2="'+b.x+'" y2="'+b.y+'" stroke="'+(pi?colors[lane[p]%colors.length]:col)+'" stroke-width="3"/>'
+      :'<path d="M'+a.x+' '+a.y+' C'+(a.x+dx/2)+' '+a.y+' '+(b.x-dx/2)+' '+b.y+' '+b.x+' '+b.y+'" fill="none" stroke="'+(pi?colors[lane[p]%colors.length]:col)+'" stroke-width="3"/>';
+  }));
+  G.order.forEach(id=>{const p=pos(id);const col=colors[lane[id]%colors.length];
+    s+='<circle cx="'+p.x+'" cy="'+p.y+'" r="9" fill="'+col+'" stroke="var(--panel)" stroke-width="3"/><text x="'+p.x+'" y="'+(p.y+25)+'" text-anchor="middle" fill="var(--muted)">'+id.slice(0,5)+'</text>';
+  });
+  Object.keys(G.branches).forEach((b,i)=>{
+    const id=G.branches[b];if(!G.commits[id])return;const p=pos(id);
+    const same=Object.keys(G.branches).filter(x=>G.branches[x]===id);const k=same.indexOf(b);
+    const isH=b===G.head;const w=b.length*7+(isH?44:16);
+    s+='<g transform="translate('+(p.x-w/2)+','+(p.y-34-k*20)+')"><rect width="'+w+'" height="17" rx="8" fill="'+(isH?'#e8590c':'#868e96')+'"/><text x="'+w/2+'" y="12" text-anchor="middle" fill="#fff" font-weight="700">'+(isH?'HEAD → ':'')+E(b)+'</text></g>';
+  });
+  s+='</svg>';el.innerHTML=s;
+  el.scrollLeft=el.scrollWidth;
+}
+
+function stopLab(){}
+function renderLab(){
+  setCrumb('Laboratório');
+  if(!G)G=newRepo();
+  view.innerHTML=`
+  <div class="kicker">Pratique</div><h1>Laboratório Git</h1>
+  <p class="lead">Um repositório simulado direto no navegador. Digite comandos, veja a árvore de commits crescer e cumpra as metas. Nada aqui afeta seu computador.</p>
+  <div class="chips" id="chips"></div>
+  <div class="lab">
+    <div class="term"><div class="bar"><i></i><i></i><i></i><span>~/projeto — simulador</span></div><div id="tout"></div>
+      <div class="tin"><span>$</span><input id="tin" autocomplete="off" spellcheck="false" placeholder="digite um comando e pressione Enter"></div></div>
+    <div class="side">
+      <div class="panel"><h4>🎯 Metas</h4><div id="goals"></div></div>
+      <div class="panel"><h4>Arquivos</h4><div class="fstate" id="files"></div></div>
+      <div class="panel"><h4>Gráfico de commits</h4><div id="graph"></div></div>
+    </div>
+  </div>
+  <div class="card"><b>Roteiro sugerido</b>
+  <ol><li><code>git init</code> → <code>echo "ola" > a.txt</code> → <code>git add .</code> → <code>git commit -m "primeiro"</code></li>
+  <li><code>git switch -c feature</code> → edite o arquivo → <code>git commit -am "muda na feature"</code></li>
+  <li><code>git switch main</code> → edite <b>a mesma linha</b> do mesmo arquivo → <code>git commit -am "muda na main"</code></li>
+  <li><code>git merge feature</code> → conflito! → <code>echo "resolvido" > a.txt</code> → <code>git add .</code> → <code>git commit</code></li>
+  <li><code>git log --oneline --graph --all</code></li></ol></div>`;
+  tout=$('#tout');tin=$('#tin');
+  if(!tout.dataset.init){out('Bem-vindo! Digite <span class="l">help</span> para ver os comandos disponíveis.','d')}
+  const chips=['git init','touch app.js','echo "linha 1" > app.js','git status','git add .','git commit -m "primeiro commit"','git switch -c feature','git log --oneline --graph --all','git branch','git switch main','git merge feature','git diff','help','reset-lab'];
+  $('#chips').innerHTML=chips.map(c=>'<button class="chip">'+E(c)+'</button>').join('');
+  $$('#chips .chip').forEach(b=>b.onclick=()=>{tin.value=b.textContent;tin.focus()});
+  tin.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){const v=tin.value;tin.value='';run(v)}
+    else if(e.key==='ArrowUp'){e.preventDefault();if(G.hi>0){G.hi--;tin.value=G.hist[G.hi]||''}}
+    else if(e.key==='ArrowDown'){e.preventDefault();if(G.hi<G.hist.length-1){G.hi++;tin.value=G.hist[G.hi]}else{G.hi=G.hist.length;tin.value=''}}
+    else if(e.key==='l'&&e.ctrlKey){e.preventDefault();tout.innerHTML=''}
+  });
+  refreshLab();
+}
+
+/* ============ eventos globais ============ */
+document.addEventListener('click',e=>{
+  const c=e.target.closest('[data-copy]');
+  if(c){const t=c.dataset.copy;
+    (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Copiado!')).catch(()=>{
+      const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('Copiado!')}catch(_){}ta.remove()});
+  }
+  if(document.body.classList.contains('menu')&&!e.target.closest('aside')&&!e.target.closest('#menuBtn'))document.body.classList.remove('menu');
+});
+$('#menuBtn').onclick=()=>document.body.classList.toggle('menu');
+$('#search').addEventListener('input',e=>renderNav(e.target.value));
+document.addEventListener('keydown',e=>{
+  const tag=(e.target.tagName||'').toLowerCase();
+  if(e.key==='/'&&tag!=='input'&&tag!=='textarea'){e.preventDefault();$('#search').focus();document.body.classList.add('menu')}
+  if(tag==='input'||tag==='textarea')return;
+  const r=location.hash.replace('#','')||'/';const l=FLAT.find(x=>x.route===r);
+  if(l){const i=FLAT.indexOf(l);if(e.key==='ArrowRight'&&FLAT[i+1])location.hash=FLAT[i+1].route;if(e.key==='ArrowLeft'&&FLAT[i-1])location.hash=FLAT[i-1].route}
+});
+window.addEventListener('scroll',()=>{const h=document.documentElement;$('#readbar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight||1)*100)+'%'},{passive:true});
+function applyTheme(t){if(t)document.documentElement.dataset.theme=t;else delete document.documentElement.dataset.theme}
+applyTheme(store.get('gg-theme',null));
+$('#themeBtn').onclick=()=>{const dark=document.documentElement.dataset.theme?document.documentElement.dataset.theme==='dark':matchMedia('(prefers-color-scheme:dark)').matches;const n=dark?'light':'dark';applyTheme(n);store.set('gg-theme',n)};
+
+route();
+</script>
+</body>
+</html>
